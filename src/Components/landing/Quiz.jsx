@@ -1,11 +1,10 @@
 import axiosInstance from "../../config/axios";
 import { useState, useEffect } from "react";
-import { Trophy, Hash } from "lucide-react";
+import { Trophy } from "lucide-react";
 
 const letters = ["A", "B", "C", "D"];
 
 export default function QuizSection() {
-
   // =========================
   // STATE SISWA
   // =========================
@@ -39,7 +38,8 @@ export default function QuizSection() {
   const [nilaiAkhir, setNilaiAkhir] = useState(0);
   const [quizList, setQuizList] = useState([]);
   const [selectedQuiz, setSelectedQuiz] = useState("");
-  const [showQuizSelection, setShowQuizSelection] = useState(false);
+  const [showQuizSelection, setShowQuizSelection] =
+    useState(false);
   const [judulKuis, setJudulKuis] = useState("");
 
   // =========================
@@ -59,83 +59,85 @@ export default function QuizSection() {
   // FETCH SISWA
   // =========================
   async function fetchStudents() {
-  try {
-    const res = await axiosInstance.get("/siswa");
+    try {
+      const res = await axiosInstance.get("/siswa");
 
-    console.log("DEBUG SISWA:");
-    console.log(res.data);
+      console.log("DEBUG SISWA:");
+      console.log(res.data);
 
-    setStudents(res.data);
-
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-  // =========================
-  // Kuis List
-  // =========================
-    async function fetchQuizList() {
-  try {
-
-   const response = await axiosInstance.get("/kuis/list");
-
-    const data = response.data;
-
-    setQuizList(data);
-
-    if (data.length === 0) {
-
-      setSelectedQuiz("");
-      setShowQuizSelection(false);
-
-    } else if (data.length === 1) {
-
-      console.log("LIST KUIS", data);
-      console.log("AUTO PILIH", data[0].id_kuis);
-
-      setSelectedQuiz(data[0].id_kuis);
-      setShowQuizSelection(false);
-
-    } else {
-
-      setSelectedQuiz("");
-      setShowQuizSelection(true);
-
+      setStudents(res.data);
+    } catch (error) {
+      console.log(error);
     }
-
-  } catch (error) {
-
-    console.log(error);
-
   }
-}
 
+  // =========================
+  // FETCH LIST KUIS
+  // =========================
+  async function fetchQuizList() {
+    try {
+      const response =
+        await axiosInstance.get("/kuis/list");
+
+      const data = response.data;
+
+      setQuizList(data);
+
+      if (data.length === 0) {
+        setSelectedQuiz("");
+        setShowQuizSelection(false);
+      } else if (data.length === 1) {
+        console.log("LIST KUIS", data);
+        console.log(
+          "AUTO PILIH",
+          data[0].id_kuis
+        );
+
+        setSelectedQuiz(data[0].id_kuis);
+        setShowQuizSelection(false);
+      } else {
+        setSelectedQuiz("");
+        setShowQuizSelection(true);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   // =========================
   // FETCH SOAL
   // =========================
   async function fetchQuestions(idKuis) {
-  try {
+    try {
+      setLoading(true);
 
-    const response = await axiosInstance.get(
-`/kuis/${idKuis}/soal`
-);
+      const response =
+        await axiosInstance.get(
+          `/kuis/${idKuis}/soal`
+        );
 
-    setQuestions(response.data);
+      console.log(
+        "DATA SOAL:",
+        response.data
+      );
 
-  } catch (error) {
-
-    console.log(error);
-
+      setQuestions(response.data);
+    } catch (error) {
+      console.log(error);
+      setError(
+        "Gagal mengambil soal kuis."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
   // =========================
   // TOTAL POIN
   // =========================
   const totalPoin = questions.reduce(
-    (sum, item) => sum + item.poin,
+    (sum, item) =>
+      sum + Number(item.poin || 0),
     0
   );
 
@@ -143,144 +145,196 @@ export default function QuizSection() {
   // PROGRESS
   // =========================
   const progress =
-    ((idx + (done ? 1 : 0)) / questions.length) * 100;
-
-  // =========================
-  // NILAI AKHIR
-  // =========================
-  const finalScore = Math.round(
-    (correctAnswers / totalPoin) * 100
-  );
+    questions.length > 0
+      ? ((idx + (done ? 1 : 0)) /
+          questions.length) *
+        100
+      : 0;
 
   // =========================
   // START QUIZ
   // =========================
   async function startQuiz() {
-console.log("selectedQuiz =", selectedQuiz);
-console.log("quizList =", quizList);
-  if (!selectedStudent) {
-    setError("Pilih siswa terlebih dahulu");
-    return;
+    console.log(
+      "selectedQuiz =",
+      selectedQuiz
+    );
+
+    console.log(
+      "quizList =",
+      quizList
+    );
+
+    if (!selectedStudent) {
+      setError(
+        "Pilih siswa terlebih dahulu"
+      );
+      return;
+    }
+
+    if (
+      quizList.length > 1 &&
+      !selectedQuiz
+    ) {
+      setError(
+        "Pilih kuis terlebih dahulu"
+      );
+      return;
+    }
+
+    const siswa = students.find(
+      (item) =>
+        item.nis === selectedStudent
+    );
+
+    if (!siswa) {
+      setError(
+        "Siswa tidak ditemukan"
+      );
+      return;
+    }
+
+    // =========================
+    // AMBIL KUIS
+    // =========================
+    const kuisDipilih =
+      quizList.find(
+        (item) =>
+          item.id_kuis == selectedQuiz
+      );
+
+    if (kuisDipilih) {
+      setJudulKuis(
+        kuisDipilih.judul
+      );
+    }
+
+    setNis(siswa.nis);
+    setNama(siswa.nama);
+
+    await fetchQuestions(
+      selectedQuiz
+    );
+
+    setError("");
+    setStarted(true);
+    setAnswers([]);
+    setCorrectAnswers(0);
+    setIdx(0);
+    setSelected(null);
+    setDone(false);
   }
-
-  if (quizList.length > 1 && !selectedQuiz) {
-    setError("Pilih kuis terlebih dahulu");
-    return;
-  }
-
-  const siswa = students.find(
-    (item) => item.nis === selectedStudent
-  );
-
-  if (!siswa) {
-    setError("Siswa tidak ditemukan");
-    return;
-  }
-
-  // Ambil data kuis yang dipilih
-  const kuisDipilih = quizList.find(
-    (item) => item.id_kuis == selectedQuiz
-  );
-
-  if (kuisDipilih) {
-    setJudulKuis(kuisDipilih.judul);
-  }
-
-  setNis(siswa.nis);
-  setNama(siswa.nama);
-
-  await fetchQuestions(selectedQuiz);
-
-  setError("");
-  setStarted(true);
-  setAnswers([]);
-  setCorrectAnswers(0);
-  setIdx(0);
-  setDone(false);
-}
 
   // =========================
   // NEXT QUESTION
   // =========================
   async function handleNext() {
+    if (selected === null) return;
 
-  if (selected === null) return;
+    // =========================
+    // KONVERSI INDEX KE HURUF
+    // =========================
+    const jawabanHuruf =
+      letters[selected];
 
-  // KONVERSI INDEX KE HURUF
-  const jawabanHuruf = letters[selected];
+    // =========================
+    // SIMPAN JAWABAN
+    // =========================
+    const newAnswers = [
+      ...answers,
+      {
+        id_detail_kuis:
+          current.id_detail_kuis,
 
-  // SIMPAN JAWABAN
-  const newAnswers = [
-    ...answers,
-    {
-      id_detail_kuis: current.id_detail_kuis,
-      jawaban_siswa: jawabanHuruf,
-    },
-  ];
+        jawaban_siswa:
+          jawabanHuruf,
+      },
+    ];
 
-  setAnswers(newAnswers);
+    setAnswers(newAnswers);
 
-  // HITUNG BENAR
-  let newCorrect = correctAnswers;
+    // =========================
+    // HITUNG BENAR
+    // =========================
+    let newCorrect =
+      correctAnswers;
 
-  if (selected === current.answer) {
-    newCorrect += current.poin;
-    setCorrectAnswers(newCorrect);
-  }
-
-  setSelected(null);
-
-  // NEXT SOAL
-  if (idx + 1 < questions.length) {
-
-    setIdx(idx + 1);
-
-  } else {
-if (submitting) return;
-
-setSubmitting(true);
-    try {
-
-      // CARI SISWA
-      const siswa = students.find(
-        (item) => item.nis === selectedStudent
+    if (
+      selected === current.answer
+    ) {
+      newCorrect += Number(
+        current.poin || 0
       );
 
-      // SUBMIT KE BACKEND
-      const response = await axiosInstance.post(
-        "/kuis/submit",
-        {
-          id_siswa: siswa.id_siswa,
-          id_kuis: selectedQuiz,
-          jawaban: newAnswers,
-        }
+      setCorrectAnswers(
+        newCorrect
       );
+    }
 
-      console.log(response.data);
+    setSelected(null);
 
-      setNilaiAkhir(response.data.nilai);
+    // =========================
+    // NEXT SOAL
+    // =========================
+    if (
+      idx + 1 <
+      questions.length
+    ) {
+      setIdx(idx + 1);
+    } else {
+      if (submitting) return;
 
-      setDone(true);
-      setSubmitting(false);
+      setSubmitting(true);
 
-    } catch (error) {
+      try {
+        const siswa =
+          students.find(
+            (item) =>
+              item.nis ===
+              selectedStudent
+          );
 
-  setSubmitting(false);
+        const response =
+          await axiosInstance.post(
+            "/kuis/submit",
+            {
+              id_siswa:
+                siswa.id_siswa,
 
-  console.log(error);
+              id_kuis:
+                selectedQuiz,
 
-  alert("Gagal menyimpan jawaban");
+              jawaban:
+                newAnswers,
+            }
+          );
 
-}
+        console.log(
+          response.data
+        );
 
+        setNilaiAkhir(
+          response.data.nilai
+        );
+
+        setDone(true);
+        setSubmitting(false);
+      } catch (error) {
+        setSubmitting(false);
+
+        console.log(error);
+
+        alert(
+          "Gagal menyimpan jawaban"
+        );
+      }
+    }
   }
 
-}
   // =========================
   // RESET
   // =========================
   function reset() {
-
     setIdx(0);
     setSelected(null);
     setCorrectAnswers(0);
@@ -300,27 +354,55 @@ setSubmitting(true);
     setJudulKuis("");
 
     setError("");
-}
+
+    // Ambil ulang daftar kuis
+    fetchQuizList();
+  }
 
   // =========================
-  // LOADING
+  // LOADING SOAL
   // =========================
-  if (started && questions.length === 0) {
-  return (
-    <div className="py-20 text-center">
-      Soal tidak ditemukan
-    </div>
-  );
-}
+  if (
+    started &&
+    loading
+  ) {
+    return (
+      <div className="py-20 text-center">
+        <p className="text-lg font-semibold text-ink">
+          Memuat soal...
+        </p>
+      </div>
+    );
+  }
+
+  // =========================
+  // SOAL TIDAK DITEMUKAN
+  // =========================
+  if (
+    started &&
+    !loading &&
+    questions.length === 0
+  ) {
+    return (
+      <div className="py-20 text-center">
+        <p className="text-red-500">
+          Soal tidak ditemukan
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <section id="kuis" className="py-24 bg-brand-secondary/5">
-
+    <section
+      id="kuis"
+      className="py-24 bg-brand-secondary/5"
+    >
       <div className="max-w-4xl mx-auto px-6">
 
-        {/* HEADING */}
+        {/* =========================
+            HEADING
+        ========================= */}
         <div className="text-center mb-10">
-
           <span className="inline-block text-brand-secondary font-bold text-sm uppercase tracking-widest mb-3">
             Kuis Interaktif
           </span>
@@ -330,14 +412,15 @@ setSubmitting(true);
           </h2>
         </div>
 
-        {/* CARD */}
+        {/* =========================
+            CARD
+        ========================= */}
         <div className="bg-card rounded-[32px] p-6 sm:p-12 shadow-xl border border-brand-secondary/10">
 
-          {/* =========================
+          {/* =================================================
               FORM PILIH SISWA
-          ========================= */}
+          ================================================= */}
           {!started ? (
-
             <div className="max-w-xl mx-auto">
 
               <h3 className="font-display text-2xl font-bold text-ink mb-6 text-center">
@@ -346,38 +429,52 @@ setSubmitting(true);
 
               <div className="space-y-5">
 
-                {/* DROPDOWN */}
+                {/* DROPDOWN SISWA */}
                 <div>
-
                   <label className="block text-sm font-bold text-ink mb-2">
                     Daftar Siswa
                   </label>
 
                   <div className="relative">
-
                     <select
-                      value={selectedStudent}
-                      onChange={(e) => setSelectedStudent(e.target.value)}
+                      value={
+                        selectedStudent
+                      }
+                      onChange={(e) =>
+                        setSelectedStudent(
+                          e.target.value
+                        )
+                      }
                       className="w-full px-4 py-4 rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-brand-secondary"
                     >
                       <option value="">
                         Pilih Nama
                       </option>
 
-                      {students.map((student) => (
-
-                        <option
-                          key={student.id_siswa}
-                          value={student.nis}
-                        >
-                          {student.nis} - {student.nama}
-                        </option>
-                      ))}
+                      {students.map(
+                        (student) => (
+                          <option
+                            key={
+                              student.id_siswa
+                            }
+                            value={
+                              student.nis
+                            }
+                          >
+                            {student.nis} -{" "}
+                            {student.nama}
+                          </option>
+                        )
+                      )}
                     </select>
                   </div>
-                  {quizList.length === 0 && (
-                    <p className="text-red-500 text-sm">
-                      Belum ada kuis yang aktif.
+
+                  {/* KUIS KOSONG */}
+                  {quizList.length ===
+                    0 && (
+                    <p className="text-red-500 text-sm mt-2">
+                      Belum ada kuis
+                      yang aktif.
                     </p>
                   )}
 
@@ -389,44 +486,64 @@ setSubmitting(true);
                   )}
                 </div>
 
-              {showQuizSelection && (
-  <div>
-    <label className="block text-sm font-bold text-ink mb-2">
-      Pilih Kuis
-    </label>
+                {/* PILIH KUIS */}
+                {showQuizSelection && (
+                  <div>
+                    <label className="block text-sm font-bold text-ink mb-2">
+                      Pilih Kuis
+                    </label>
 
-    <select
-      value={selectedQuiz}
-      onChange={(e) => setSelectedQuiz(e.target.value)}
-      className="w-full px-4 py-4 rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-brand-secondary"
-    >
-      <option value="">
-        Pilih Kuis
-      </option>
+                    <select
+                      value={
+                        selectedQuiz
+                      }
+                      onChange={(e) =>
+                        setSelectedQuiz(
+                          e.target.value
+                        )
+                      }
+                      className="w-full px-4 py-4 rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-brand-secondary"
+                    >
+                      <option value="">
+                        Pilih Kuis
+                      </option>
 
-      {quizList.map((quiz) => (
-        <option
-          key={quiz.id_kuis}
-          value={quiz.id_kuis}
-        >
-                {quiz.judul}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-                {/* BUTTON */}
+                      {quizList.map(
+                        (quiz) => (
+                          <option
+                            key={
+                              quiz.id_kuis
+                            }
+                            value={
+                              quiz.id_kuis
+                            }
+                          >
+                            {quiz.judul}
+                          </option>
+                        )
+                      )}
+                    </select>
+                  </div>
+                )}
+
+                {/* BUTTON MULAI */}
                 <button
-  onClick={startQuiz}
-  disabled={
-    !selectedStudent ||
-    loading ||
-    (quizList.length > 1 && !selectedQuiz)
-  }
-  className="w-full bg-brand-secondary text-white py-4 rounded-2xl font-bold shadow-lg shadow-brand-secondary/30 disabled:opacity-40 disabled:cursor-not-allowed hover:-translate-y-0.5 transition-transform"
->
-  Mulai Kuis
-</button>
+                  onClick={
+                    startQuiz
+                  }
+                  disabled={
+                    !selectedStudent ||
+                    loading ||
+                    quizList.length ===
+                      0 ||
+                    (quizList.length >
+                      1 &&
+                      !selectedQuiz)
+                  }
+                  className="w-full bg-brand-secondary text-white py-4 rounded-2xl font-bold shadow-lg shadow-brand-secondary/30 disabled:opacity-40 disabled:cursor-not-allowed hover:-translate-y-0.5 transition-transform"
+                >
+                  Mulai Kuis
+                </button>
               </div>
             </div>
 
@@ -434,24 +551,25 @@ setSubmitting(true);
 
             <>
               {/* =========================
+                  JUDUL KUIS
+              ========================= */}
+              <div className="mb-6 p-5 bg-brand-secondary/10 border border-brand-secondary/20 rounded-2xl text-center">
+                <p className="text-sm font-semibold text-brand-secondary uppercase tracking-wide">
+                  Kuis
+                </p>
+
+                <h3 className="text-xl sm:text-2xl font-bold text-ink mt-1">
+                  {judulKuis}
+                </h3>
+              </div>
+
+              {/* =========================
                   INFO SISWA
               ========================= */}
-              {/* JUDUL KUIS */}
-<div className="mb-6 p-5 bg-brand-secondary/10 border border-brand-secondary/20 rounded-2xl text-center">
-  <p className="text-sm font-semibold text-brand-secondary uppercase tracking-wide">
-    Kuis
-  </p>
-
-  <h3 className="text-xl sm:text-2xl font-bold text-ink mt-1">
-    {judulKuis}
-  </h3>
-</div>
-
               <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
 
                 {/* NAMA */}
                 <div>
-
                   <p className="font-bold text-ink text-lg">
                     {nama}
                   </p>
@@ -463,24 +581,23 @@ setSubmitting(true);
 
                 {/* PROGRESS */}
                 <div className="text-right shrink-0">
-
                   <div className="flex items-center justify-between gap-4 text-xs text-ink-soft mb-1">
-
-                    <span>Progress</span>
+                    <span>
+                      Progress
+                    </span>
 
                     <span>
-                      {idx + 1}/{questions.length}
+                      {idx + 1}/
+                      {questions.length}
                     </span>
                   </div>
 
-                  
-
-                  {/* BAR */}
                   <div className="w-28 sm:w-36 h-2 bg-muted rounded-full overflow-hidden">
-
                     <div
                       className="h-full bg-brand-accent rounded-full transition-all duration-500"
-                      style={{ width: `${progress}%` }}
+                      style={{
+                        width: `${progress}%`,
+                      }}
                     />
                   </div>
                 </div>
@@ -491,58 +608,133 @@ setSubmitting(true);
               ========================= */}
               <div className="space-y-6">
 
-                {/* PERTANYAAN */}
+                {/* =========================
+                    PERTANYAAN
+                ========================= */}
                 <div className="p-5 sm:p-6 bg-bg-soft rounded-2xl">
 
                   <p className="text-sm font-bold text-brand-secondary mb-2">
                     Soal {idx + 1}
                   </p>
 
-                  <p className="text-base sm:text-lg font-medium text-ink">
-                    {current.q}
-                  </p>
+                  {/* TEKS PERTANYAAN */}
+                  {current.q && (
+                    <p className="text-base sm:text-lg font-medium text-ink leading-relaxed">
+                      {current.q}
+                    </p>
+                  )}
+
+                  {/* GAMBAR PERTANYAAN */}
+                  {current.gambar_pertanyaan && (
+                    <div className="mt-4 flex justify-center">
+                      <img
+                        src={
+                          current.gambar_pertanyaan
+                        }
+                        alt={`Gambar soal ${
+                          idx + 1
+                        }`}
+                        className="max-h-80 max-w-full rounded-2xl object-contain border border-border shadow-sm"
+                      />
+                    </div>
+                  )}
                 </div>
 
-                {/* OPTIONS */}
+                {/* =========================
+                    OPTIONS
+                ========================= */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
 
-                  {current.options?.map((opt, i) => (
+                  {current.options?.map(
+                    (opt, i) => {
 
-                    <button
-                      key={opt}
-                      onClick={() => setSelected(i)}
-                      className={`p-4 text-left border-2 rounded-2xl font-medium transition-all ${
-                        selected === i
-                          ? "border-brand-secondary bg-brand-secondary/10 text-ink"
-                          : "border-border hover:border-brand-secondary/50 hover:bg-brand-secondary/5 text-ink"
-                      }`}
-                    >
+                      const optionLetter =
+                        letters[i];
 
-                      <span className="font-display font-bold text-brand-secondary mr-2">
-                        {letters[i]}.
-                      </span>
+                      const imageField =
+                        `gambar_pilihan_${optionLetter.toLowerCase()}`;
 
-                      {opt}
-                    </button>
-                  ))}
+                      const optionImage =
+                        current[
+                          imageField
+                        ];
+
+                      return (
+                        <button
+                          key={
+                            optionLetter
+                          }
+                          type="button"
+                          onClick={() =>
+                            setSelected(
+                              i
+                            )
+                          }
+                          className={`p-4 text-left border-2 rounded-2xl font-medium transition-all ${
+                            selected ===
+                            i
+                              ? "border-brand-secondary bg-brand-secondary/10 text-ink"
+                              : "border-border hover:border-brand-secondary/50 hover:bg-brand-secondary/5 text-ink"
+                          }`}
+                        >
+
+                          {/* LABEL */}
+                          <div className="flex items-start gap-2">
+
+                            <span className="shrink-0 font-display font-bold text-brand-secondary">
+                              {
+                                optionLetter
+                              }
+                              .
+                            </span>
+
+                            {/* TEKS */}
+                            {opt && (
+                              <span className="leading-relaxed">
+                                {opt}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* GAMBAR PILIHAN */}
+                          {optionImage && (
+                            <div className="mt-4 flex justify-center">
+                              <img
+                                src={
+                                  optionImage
+                                }
+                                alt={`Pilihan ${optionLetter}`}
+                                className="max-h-52 max-w-full rounded-xl object-contain"
+                              />
+                            </div>
+                          )}
+                        </button>
+                      );
+                    }
+                  )}
                 </div>
 
-                {/* BUTTON NEXT */}
+                {/* =========================
+                    BUTTON NEXT
+                ========================= */}
                 <div className="pt-2 flex justify-end">
-
                   <button
-                    onClick={handleNext}
-                    disabled={selected === null || submitting}
+                    onClick={
+                      handleNext
+                    }
+                    disabled={
+                      selected ===
+                        null ||
+                      submitting
+                    }
                     className="bg-brand-secondary text-white px-8 sm:px-10 py-3 rounded-xl font-bold shadow-lg shadow-brand-secondary/30 disabled:opacity-40 disabled:cursor-not-allowed hover:-translate-y-0.5 transition-transform"
                   >
-
-                    {
-                      submitting
+                    {submitting
                       ? "Menyimpan..."
-                      : idx + 1 === questions.length
+                      : idx + 1 ===
+                        questions.length
                       ? "Selesai"
-                      : "Lanjut"
-                      }
+                      : "Lanjut"}
                   </button>
                 </div>
               </div>
@@ -557,7 +749,6 @@ setSubmitting(true);
 
               {/* ICON */}
               <div className="size-24 mx-auto bg-brand-primary/10 rounded-full flex items-center justify-center mb-6">
-
                 <Trophy className="size-12 text-brand-primary" />
               </div>
 
@@ -575,8 +766,6 @@ setSubmitting(true);
               <p className="text-ink-soft mb-6">
                 NIS: {nis}
               </p>
-
-              
 
               {/* NILAI */}
               <p className="text-ink-soft mb-3">
