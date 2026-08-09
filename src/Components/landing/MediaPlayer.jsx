@@ -119,14 +119,10 @@ export default function MediaSection() {
     setCurrentTime("00:00");
     setDuration("00:00");
 
-    // Reset audio
     setVolume(1);
     setMuted(false);
 
-    // Reset speed
     setPlaybackRate(1);
-
-    // Reset seek effect
     setSeekEffect(null);
 
     if (videoRef.current) {
@@ -226,11 +222,12 @@ export default function MediaSection() {
       seconds > 0 ? "forward" : "backward"
     );
 
-    // Reset timer indikator
+    // Hapus timer sebelumnya
     if (seekTimeout.current) {
       clearTimeout(seekTimeout.current);
     }
 
+    // Indikator hilang setelah 600ms
     seekTimeout.current = setTimeout(() => {
       setSeekEffect(null);
     }, 600);
@@ -241,37 +238,41 @@ export default function MediaSection() {
   // =========================
   // DOUBLE TAP
   // =========================
- const handleDoubleTap = (e) => {
-  const now = Date.now();
+  const handleDoubleTap = (e) => {
+    const now = Date.now();
 
-  const rect = e.currentTarget.getBoundingClientRect();
+    const rect =
+      e.currentTarget.getBoundingClientRect();
 
-  const x = e.clientX - rect.left;
-  const width = rect.width;
+    const x = e.clientX - rect.left;
+    const width = rect.width;
 
-  // Area kiri = 25%
-  const leftZone = width * 0.20;
+    // Area kiri 20%
+    const leftZone = width * 0.20;
 
-  // Area kanan = 25%
-  const rightZone = width * 0.80;
+    // Area kanan 20%
+    const rightZone = width * 0.80;
 
-  if (now - lastTap.current < 300) {
+    // Double tap
+    if (now - lastTap.current < 300) {
 
-    // Double tap kiri
-    if (x <= leftZone) {
-      seekVideo(-10);
+      // KIRI
+      if (x <= leftZone) {
+        seekVideo(-10);
+      }
+
+      // KANAN
+      else if (x >= rightZone) {
+        seekVideo(10);
+      }
+
+      // TENGAH 60%
+      // Tidak melakukan apa-apa
     }
 
-    // Double tap kanan
-    else if (x >= rightZone) {
-      seekVideo(10);
-    }
+    lastTap.current = now;
+  };
 
-    // Bagian tengah tidak melakukan apa-apa
-  }
-
-  lastTap.current = now;
-};
   // =========================
   // MUTE / UNMUTE
   // =========================
@@ -285,8 +286,6 @@ export default function MediaSection() {
     if (v.muted) {
       v.muted = false;
 
-      // Jika volume 0,
-      // kembalikan ke 50%
       if (v.volume === 0) {
         v.volume = 0.5;
         setVolume(0.5);
@@ -403,7 +402,6 @@ export default function MediaSection() {
       formatTime(v.currentTime)
     );
 
-    // Terapkan pengaturan player
     v.volume = volume;
     v.muted = muted;
     v.playbackRate = playbackRate;
@@ -448,9 +446,6 @@ export default function MediaSection() {
     );
   }
 
-  // =========================
-  // RENDER
-  // =========================
   return (
     <section
       id="mediaplayer"
@@ -512,7 +507,7 @@ export default function MediaSection() {
               <div
                 className="
                   absolute
-                  left-[25%]
+                  left-[20%]
                   top-1/2
                   -translate-x-1/2
                   -translate-y-1/2
@@ -525,18 +520,22 @@ export default function MediaSection() {
                   animate-pulse
                 "
               >
-                <span className="
-                  text-5xl
-                  font-bold
-                  leading-none
-                ">
+                <span
+                  className="
+                    text-2xl
+                    font-bold
+                    leading-none
+                  "
+                >
                   &lt;
                 </span>
 
-                <span className="
-                  text-xl
-                  font-semibold
-                ">
+                <span
+                  className="
+                    text-sm
+                    font-semibold
+                  "
+                >
                   10
                 </span>
               </div>
@@ -546,7 +545,7 @@ export default function MediaSection() {
               <div
                 className="
                   absolute
-                  right-[25%]
+                  right-[20%]
                   top-1/2
                   translate-x-1/2
                   -translate-y-1/2
@@ -559,18 +558,22 @@ export default function MediaSection() {
                   animate-pulse
                 "
               >
-                <span className="
-                  text-xl
-                  font-semibold
-                ">
+                <span
+                  className="
+                    text-sm
+                    font-semibold
+                  "
+                >
                   10
                 </span>
 
-                <span className="
-                  text-5xl
-                  font-bold
-                  leading-none
-                ">
+                <span
+                  className="
+                    text-2xl
+                    font-bold
+                    leading-none
+                  "
+                >
                   &gt;
                 </span>
               </div>
@@ -649,10 +652,7 @@ export default function MediaSection() {
               `}
             >
 
-              {/* ========================= */}
               {/* SEEK BAR */}
-              {/* ========================= */}
-
               <input
                 type="range"
                 min={0}
@@ -704,22 +704,23 @@ export default function MediaSection() {
                 "
               />
 
-              {/* ========================= */}
-              {/* CONTROLS */}
-              {/* ========================= */}
-
-              <div className="
-                flex
-                items-center
-                justify-between
-              ">
-
-                {/* LEFT CONTROLS */}
-                <div className="
+              {/* CONTROL BUTTONS */}
+              <div
+                className="
                   flex
                   items-center
-                  gap-2
-                ">
+                  justify-between
+                "
+              >
+
+                {/* LEFT */}
+                <div
+                  className="
+                    flex
+                    items-center
+                    gap-2
+                  "
+                >
 
                   {/* PLAY */}
                   <button
@@ -784,22 +785,26 @@ export default function MediaSection() {
                   />
 
                   {/* TIME */}
-                  <span className="
-                    text-white
-                    text-xs
-                    ml-1
-                  ">
+                  <span
+                    className="
+                      text-white
+                      text-xs
+                      ml-1
+                    "
+                  >
                     {currentTime} / {duration}
                   </span>
 
                 </div>
 
-                {/* RIGHT CONTROLS */}
-                <div className="
-                  flex
-                  items-center
-                  gap-3
-                ">
+                {/* RIGHT */}
+                <div
+                  className="
+                    flex
+                    items-center
+                    gap-3
+                  "
+                >
 
                   {/* SPEED */}
                   <div className="relative">
@@ -851,14 +856,16 @@ export default function MediaSection() {
                         }
                       >
 
-                        <div className="
-                          px-3
-                          py-2
-                          text-xs
-                          text-white/50
-                          border-b
-                          border-white/10
-                        ">
+                        <div
+                          className="
+                            px-3
+                            py-2
+                            text-xs
+                            text-white/50
+                            border-b
+                            border-white/10
+                          "
+                        >
                           Kecepatan
                         </div>
 
@@ -994,20 +1001,24 @@ export default function MediaSection() {
           {/* VIDEO INFORMATION */}
           {/* ========================= */}
 
-          <div className="
-            text-white
-            mt-4
-            space-y-3
-          ">
+          <div
+            className="
+              text-white
+              mt-4
+              space-y-3
+            "
+          >
 
             {/* DURASI */}
-            <div className="
-              flex
-              items-center
-              gap-2
-              text-sm
-              text-white/70
-            ">
+            <div
+              className="
+                flex
+                items-center
+                gap-2
+                text-sm
+                text-white/70
+              "
+            >
               <Clock size={16} />
 
               <span>
@@ -1016,20 +1027,24 @@ export default function MediaSection() {
             </div>
 
             {/* JUDUL */}
-            <h3 className="
-              text-2xl
-              font-bold
-              leading-snug
-            ">
+            <h3
+              className="
+                text-2xl
+                font-bold
+                leading-snug
+              "
+            >
               {video.judul}
             </h3>
 
             {/* DESKRIPSI */}
-            <p className="
-              text-white/70
-              text-sm
-              leading-relaxed
-            ">
+            <p
+              className="
+                text-white/70
+                text-sm
+                leading-relaxed
+              "
+            >
               {video.deskripsi}
             </p>
 
