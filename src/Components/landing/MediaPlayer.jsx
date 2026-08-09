@@ -9,8 +9,6 @@ import {
   Volume2,
   VolumeX,
   Settings,
-  RotateCcw,
-  RotateCw,
 } from "lucide-react";
 import axiosInstance from "../../config/axios";
 
@@ -18,22 +16,36 @@ export default function MediaSection() {
   const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
 
+  // =========================
+  // PLAYER
+  // =========================
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState("00:00");
   const [currentTime, setCurrentTime] = useState("00:00");
   const [progress, setProgress] = useState(0);
 
+  // =========================
   // AUDIO
+  // =========================
   const [volume, setVolume] = useState(1);
   const [muted, setMuted] = useState(false);
 
+  // =========================
   // PLAYBACK SPEED
+  // =========================
   const [playbackRate, setPlaybackRate] = useState(1);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
 
-  // SEEK ANIMATION
+  // =========================
+  // DOUBLE TAP SEEK
+  // =========================
   const [seekEffect, setSeekEffect] = useState(null);
+  const lastTap = useRef(0);
+  const seekTimeout = useRef(null);
 
+  // =========================
+  // CONTROLS
+  // =========================
   const [showControls, setShowControls] = useState(true);
   const hideTimeout = useRef(null);
 
@@ -46,14 +58,24 @@ export default function MediaSection() {
     fetchVideos();
   }, []);
 
+  // =========================
+  // CLEANUP
+  // =========================
   useEffect(() => {
     return () => {
       if (hideTimeout.current) {
         clearTimeout(hideTimeout.current);
       }
+
+      if (seekTimeout.current) {
+        clearTimeout(seekTimeout.current);
+      }
     };
   }, []);
 
+  // =========================
+  // FETCH
+  // =========================
   const fetchVideos = async () => {
     try {
       const res = await axiosInstance.get("/video");
@@ -75,12 +97,17 @@ export default function MediaSection() {
   // FORMAT TIME
   // =========================
   const formatTime = (sec) => {
-    if (!sec || isNaN(sec)) return "00:00";
+    if (!sec || isNaN(sec)) {
+      return "00:00";
+    }
 
     const m = Math.floor(sec / 60);
     const s = Math.floor(sec % 60);
 
-    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(
+      2,
+      "0"
+    )}`;
   };
 
   // =========================
@@ -92,13 +119,20 @@ export default function MediaSection() {
     setCurrentTime("00:00");
     setDuration("00:00");
 
+    // Reset audio
     setVolume(1);
     setMuted(false);
+
+    // Reset speed
     setPlaybackRate(1);
+
+    // Reset seek effect
+    setSeekEffect(null);
 
     if (videoRef.current) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
+
       videoRef.current.volume = 1;
       videoRef.current.muted = false;
       videoRef.current.playbackRate = 1;
@@ -113,14 +147,24 @@ export default function MediaSection() {
     setIndex(newIndex);
   };
 
+  // =========================
+  // NEXT VIDEO
+  // =========================
   const nextVideo = () => {
-    if (videos.length <= 1) return;
+    if (videos.length <= 1) {
+      return;
+    }
 
     changeVideo((index + 1) % videos.length);
   };
 
+  // =========================
+  // PREVIOUS VIDEO
+  // =========================
   const prevVideo = () => {
-    if (videos.length <= 1) return;
+    if (videos.length <= 1) {
+      return;
+    }
 
     changeVideo(
       (index - 1 + videos.length) % videos.length
@@ -133,7 +177,9 @@ export default function MediaSection() {
   const toggle = async () => {
     const v = videoRef.current;
 
-    if (!v) return;
+    if (!v) {
+      return;
+    }
 
     try {
       if (v.paused) {
@@ -153,16 +199,18 @@ export default function MediaSection() {
   };
 
   // =========================
-  // SEEK +10 / -10
+  // SEEK VIDEO
   // =========================
   const seekVideo = (seconds) => {
     const v = videoRef.current;
 
-    if (!v) return;
+    if (!v || isNaN(v.duration)) {
+      return;
+    }
 
     const newTime = Math.min(
       Math.max(v.currentTime + seconds, 0),
-      v.duration || 0
+      v.duration
     );
 
     v.currentTime = newTime;
@@ -170,15 +218,20 @@ export default function MediaSection() {
     setCurrentTime(formatTime(newTime));
 
     if (v.duration > 0) {
-      setProgress(
-        (newTime / v.duration) * 100
-      );
+      setProgress((newTime / v.duration) * 100);
     }
 
-    // Animasi indikator
-    setSeekEffect(seconds > 0 ? "forward" : "backward");
+    // Tampilkan indikator
+    setSeekEffect(
+      seconds > 0 ? "forward" : "backward"
+    );
 
-    setTimeout(() => {
+    // Reset timer indikator
+    if (seekTimeout.current) {
+      clearTimeout(seekTimeout.current);
+    }
+
+    seekTimeout.current = setTimeout(() => {
       setSeekEffect(null);
     }, 600);
 
@@ -188,28 +241,23 @@ export default function MediaSection() {
   // =========================
   // DOUBLE TAP
   // =========================
-  const lastTap = useRef(0);
-
   const handleDoubleTap = (e) => {
     const now = Date.now();
 
     const rect =
       e.currentTarget.getBoundingClientRect();
 
-    const x =
-      e.clientX - rect.left;
-
+    const x = e.clientX - rect.left;
     const width = rect.width;
 
-    // Cek double tap
+    // Double tap dalam 300ms
     if (now - lastTap.current < 300) {
-
-      // Sisi kiri = mundur
+      // Sebelah kiri
       if (x < width / 2) {
         seekVideo(-10);
       }
 
-      // Sisi kanan = maju
+      // Sebelah kanan
       else {
         seekVideo(10);
       }
@@ -219,16 +267,20 @@ export default function MediaSection() {
   };
 
   // =========================
-  // MUTE
+  // MUTE / UNMUTE
   // =========================
   const toggleMute = () => {
     const v = videoRef.current;
 
-    if (!v) return;
+    if (!v) {
+      return;
+    }
 
     if (v.muted) {
       v.muted = false;
 
+      // Jika volume 0,
+      // kembalikan ke 50%
       if (v.volume === 0) {
         v.volume = 0.5;
         setVolume(0.5);
@@ -248,9 +300,12 @@ export default function MediaSection() {
   // =========================
   const handleVolumeChange = (e) => {
     const value = Number(e.target.value);
+
     const v = videoRef.current;
 
-    if (!v) return;
+    if (!v) {
+      return;
+    }
 
     v.volume = value;
 
@@ -273,7 +328,9 @@ export default function MediaSection() {
   const changePlaybackSpeed = (speed) => {
     const v = videoRef.current;
 
-    if (!v) return;
+    if (!v) {
+      return;
+    }
 
     v.playbackRate = speed;
 
@@ -300,7 +357,9 @@ export default function MediaSection() {
   const handleTimeUpdate = () => {
     const v = videoRef.current;
 
-    if (!v) return;
+    if (!v) {
+      return;
+    }
 
     if (!isNaN(v.duration) && v.duration > 0) {
       const percent =
@@ -320,7 +379,9 @@ export default function MediaSection() {
   const handleLoadedMetadata = () => {
     const v = videoRef.current;
 
-    if (!v) return;
+    if (!v) {
+      return;
+    }
 
     setDuration(
       formatTime(v.duration)
@@ -336,6 +397,7 @@ export default function MediaSection() {
       formatTime(v.currentTime)
     );
 
+    // Terapkan pengaturan player
     v.volume = volume;
     v.muted = muted;
     v.playbackRate = playbackRate;
@@ -360,7 +422,7 @@ export default function MediaSection() {
   };
 
   // =========================
-  // AUTO NEXT
+  // VIDEO ENDED
   // =========================
   const handleEnded = () => {
     setPlaying(false);
@@ -369,6 +431,9 @@ export default function MediaSection() {
     nextVideo();
   };
 
+  // =========================
+  // NO VIDEO
+  // =========================
   if (!video) {
     return (
       <section className="py-24 text-center">
@@ -377,6 +442,9 @@ export default function MediaSection() {
     );
   }
 
+  // =========================
+  // RENDER
+  // =========================
   return (
     <section
       id="mediaplayer"
@@ -384,12 +452,14 @@ export default function MediaSection() {
     >
       <div className="max-w-4xl mx-auto px-6">
 
+        {/* TITLE */}
         <div className="text-center mb-4">
           <h2 className="text-2xl md:text-3xl font-bold">
             Video Pembelajaran
           </h2>
         </div>
 
+        {/* PLAYER */}
         <div className="bg-black rounded-2xl p-3 relative shadow-xl">
 
           {/* VIDEO AREA */}
@@ -409,7 +479,12 @@ export default function MediaSection() {
             {/* VIDEO */}
             <video
               ref={videoRef}
-              className="w-full h-full object-cover rounded-xl"
+              className="
+                w-full
+                h-full
+                object-cover
+                rounded-xl
+              "
               preload="auto"
               src={`${import.meta.env.VITE_API_URL}/video/stream/${video.id_vidpem}`}
               onLoadedMetadata={handleLoadedMetadata}
@@ -424,69 +499,73 @@ export default function MediaSection() {
             />
 
             {/* ========================= */}
-            {/* SEEK EFFECT */}
+            {/* DOUBLE TAP SEEK EFFECT */}
             {/* ========================= */}
 
             {seekEffect === "backward" && (
-              <div className="
-                absolute
-                left-[25%]
-                top-1/2
-                -translate-x-1/2
-                -translate-y-1/2
-                pointer-events-none
-                flex flex-col
-                items-center
-                justify-center
-                text-white
-                animate-pulse
-              ">
-                <div className="
-                  bg-black/60
-                  rounded-full
-                  p-4
+              <div
+                className="
+                  absolute
+                  left-[25%]
+                  top-1/2
+                  -translate-x-1/2
+                  -translate-y-1/2
+                  pointer-events-none
+                  flex
+                  items-center
+                  gap-1
+                  text-white
+                  z-30
+                  animate-pulse
+                "
+              >
+                <span className="
+                  text-5xl
+                  font-bold
+                  leading-none
                 ">
-                  <RotateCcw size={32} />
-                </div>
+                  &lt;
+                </span>
 
                 <span className="
-                  text-sm
+                  text-xl
                   font-semibold
-                  mt-1
                 ">
-                  -10 detik
+                  10
                 </span>
               </div>
             )}
 
             {seekEffect === "forward" && (
-              <div className="
-                absolute
-                right-[25%]
-                top-1/2
-                translate-x-1/2
-                -translate-y-1/2
-                pointer-events-none
-                flex flex-col
-                items-center
-                justify-center
-                text-white
-                animate-pulse
-              ">
-                <div className="
-                  bg-black/60
-                  rounded-full
-                  p-4
+              <div
+                className="
+                  absolute
+                  right-[25%]
+                  top-1/2
+                  translate-x-1/2
+                  -translate-y-1/2
+                  pointer-events-none
+                  flex
+                  items-center
+                  gap-1
+                  text-white
+                  z-30
+                  animate-pulse
+                "
+              >
+                <span className="
+                  text-xl
+                  font-semibold
                 ">
-                  <RotateCw size={32} />
-                </div>
+                  10
+                </span>
 
                 <span className="
-                  text-sm
-                  font-semibold
-                  mt-1
+                  text-5xl
+                  font-bold
+                  leading-none
                 ">
-                  +10 detik
+                  &gt;
                 </span>
               </div>
             )}
@@ -497,8 +576,10 @@ export default function MediaSection() {
 
             <div
               className={`
-                absolute inset-0
-                flex items-center
+                absolute
+                inset-0
+                flex
+                items-center
                 justify-center
                 transition-all
                 duration-300
@@ -541,72 +622,6 @@ export default function MediaSection() {
             </div>
 
             {/* ========================= */}
-            {/* SEEK BUTTONS */}
-            {/* ========================= */}
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                seekVideo(-10);
-              }}
-              className={`
-                absolute
-                left-[28%]
-                top-1/2
-                -translate-x-1/2
-                -translate-y-1/2
-                bg-black/60
-                hover:bg-black/80
-                text-white
-                rounded-full
-                p-3
-                transition-all
-                duration-300
-                hover:scale-110
-                z-20
-                ${
-                  showControls
-                    ? "opacity-100"
-                    : "opacity-0 pointer-events-none"
-                }
-              `}
-              title="Mundur 10 detik"
-            >
-              <RotateCcw size={25} />
-            </button>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                seekVideo(10);
-              }}
-              className={`
-                absolute
-                right-[28%]
-                top-1/2
-                translate-x-1/2
-                -translate-y-1/2
-                bg-black/60
-                hover:bg-black/80
-                text-white
-                rounded-full
-                p-3
-                transition-all
-                duration-300
-                hover:scale-110
-                z-20
-                ${
-                  showControls
-                    ? "opacity-100"
-                    : "opacity-0 pointer-events-none"
-                }
-              `}
-              title="Maju 10 detik"
-            >
-              <RotateCw size={25} />
-            </button>
-
-            {/* ========================= */}
             {/* BOTTOM CONTROLS */}
             {/* ========================= */}
 
@@ -628,7 +643,10 @@ export default function MediaSection() {
               `}
             >
 
+              {/* ========================= */}
               {/* SEEK BAR */}
+              {/* ========================= */}
+
               <input
                 type="range"
                 min={0}
@@ -645,13 +663,16 @@ export default function MediaSection() {
                 onChange={(e) => {
                   const v = videoRef.current;
 
-                  if (!v) return;
+                  if (!v) {
+                    return;
+                  }
 
                   const value =
                     Number(e.target.value);
 
                   const newTime =
-                    (value / 100) * v.duration;
+                    (value / 100) *
+                    v.duration;
 
                   v.currentTime = newTime;
 
@@ -677,14 +698,17 @@ export default function MediaSection() {
                 "
               />
 
-              {/* CONTROL BUTTONS */}
+              {/* ========================= */}
+              {/* CONTROLS */}
+              {/* ========================= */}
+
               <div className="
                 flex
                 items-center
                 justify-between
               ">
 
-                {/* LEFT */}
+                {/* LEFT CONTROLS */}
                 <div className="
                   flex
                   items-center
@@ -700,6 +724,7 @@ export default function MediaSection() {
                     className="
                       text-white
                       hover:text-red-400
+                      transition
                     "
                   >
                     {playing ? (
@@ -718,6 +743,7 @@ export default function MediaSection() {
                     className="
                       text-white
                       hover:text-red-400
+                      transition
                     "
                   >
                     {muted || volume === 0 ? (
@@ -741,10 +767,13 @@ export default function MediaSection() {
                     onClick={(e) =>
                       e.stopPropagation()
                     }
-                    onChange={handleVolumeChange}
+                    onChange={
+                      handleVolumeChange
+                    }
                     className="
                       w-20
                       accent-red-500
+                      cursor-pointer
                     "
                   />
 
@@ -759,7 +788,7 @@ export default function MediaSection() {
 
                 </div>
 
-                {/* RIGHT */}
+                {/* RIGHT CONTROLS */}
                 <div className="
                   flex
                   items-center
@@ -785,6 +814,7 @@ export default function MediaSection() {
                         gap-1
                         text-white
                         hover:text-red-400
+                        transition
                         text-sm
                       "
                     >
@@ -851,6 +881,7 @@ export default function MediaSection() {
                               text-sm
                               text-white
                               hover:bg-white/10
+                              transition
                               ${
                                 playbackRate === speed
                                   ? "bg-red-500/30 text-red-400"
@@ -876,6 +907,7 @@ export default function MediaSection() {
                     className="
                       text-white
                       hover:text-red-400
+                      transition
                     "
                   >
                     <Maximize size={20} />
@@ -886,7 +918,10 @@ export default function MediaSection() {
               </div>
             </div>
 
-            {/* VIDEO SLIDER */}
+            {/* ========================= */}
+            {/* PREVIOUS / NEXT VIDEO */}
+            {/* ========================= */}
+
             {videos.length > 1 && (
               <>
                 <button
@@ -909,8 +944,8 @@ export default function MediaSection() {
                     z-30
                     ${
                       showControls
-                        ? "opacity-100"
-                        : "opacity-0 pointer-events-none"
+                        ? "opacity-100 translate-x-0"
+                        : "opacity-0 -translate-x-3 pointer-events-none"
                     }
                   `}
                 >
@@ -937,8 +972,8 @@ export default function MediaSection() {
                     z-30
                     ${
                       showControls
-                        ? "opacity-100"
-                        : "opacity-0 pointer-events-none"
+                        ? "opacity-100 translate-x-0"
+                        : "opacity-0 translate-x-3 pointer-events-none"
                     }
                   `}
                 >
@@ -949,13 +984,17 @@ export default function MediaSection() {
 
           </div>
 
-          {/* INFO */}
+          {/* ========================= */}
+          {/* VIDEO INFORMATION */}
+          {/* ========================= */}
+
           <div className="
             text-white
             mt-4
             space-y-3
           ">
 
+            {/* DURASI */}
             <div className="
               flex
               items-center
@@ -970,6 +1009,7 @@ export default function MediaSection() {
               </span>
             </div>
 
+            {/* JUDUL */}
             <h3 className="
               text-2xl
               font-bold
@@ -978,6 +1018,7 @@ export default function MediaSection() {
               {video.judul}
             </h3>
 
+            {/* DESKRIPSI */}
             <p className="
               text-white/70
               text-sm
