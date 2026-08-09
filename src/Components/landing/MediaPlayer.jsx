@@ -241,31 +241,37 @@ export default function MediaSection() {
   // =========================
   // DOUBLE TAP
   // =========================
-  const handleDoubleTap = (e) => {
-    const now = Date.now();
+ const handleDoubleTap = (e) => {
+  const now = Date.now();
 
-    const rect =
-      e.currentTarget.getBoundingClientRect();
+  const rect = e.currentTarget.getBoundingClientRect();
 
-    const x = e.clientX - rect.left;
-    const width = rect.width;
+  const x = e.clientX - rect.left;
+  const width = rect.width;
 
-    // Double tap dalam 300ms
-    if (now - lastTap.current < 300) {
-      // Sebelah kiri
-      if (x < width / 2) {
-        seekVideo(-10);
-      }
+  // Area kiri = 25%
+  const leftZone = width * 0.20;
 
-      // Sebelah kanan
-      else {
-        seekVideo(10);
-      }
+  // Area kanan = 25%
+  const rightZone = width * 0.80;
+
+  if (now - lastTap.current < 300) {
+
+    // Double tap kiri
+    if (x <= leftZone) {
+      seekVideo(-10);
     }
 
-    lastTap.current = now;
-  };
+    // Double tap kanan
+    else if (x >= rightZone) {
+      seekVideo(10);
+    }
 
+    // Bagian tengah tidak melakukan apa-apa
+  }
+
+  lastTap.current = now;
+};
   // =========================
   // MUTE / UNMUTE
   // =========================
