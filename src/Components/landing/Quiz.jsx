@@ -5,6 +5,7 @@ import { Trophy } from "lucide-react";
 const letters = ["A", "B", "C", "D"];
 
 export default function QuizSection() {
+
   // =========================
   // STATE SISWA
   // =========================
@@ -39,8 +40,7 @@ export default function QuizSection() {
 
   const [quizList, setQuizList] = useState([]);
   const [selectedQuiz, setSelectedQuiz] = useState("");
-  const [showQuizSelection, setShowQuizSelection] =
-    useState(false);
+  const [showQuizSelection, setShowQuizSelection] = useState(false);
 
   const [judulKuis, setJudulKuis] = useState("");
 
@@ -62,6 +62,7 @@ export default function QuizSection() {
   // =========================
   async function fetchStudents() {
     try {
+
       const res =
         await axiosInstance.get("/siswa");
 
@@ -69,8 +70,11 @@ export default function QuizSection() {
       console.log(res.data);
 
       setStudents(res.data);
+
     } catch (error) {
+
       console.log(error);
+
     }
   }
 
@@ -79,10 +83,14 @@ export default function QuizSection() {
   // =========================
   async function fetchQuizList() {
     try {
+
       const response =
         await axiosInstance.get("/kuis/list");
 
-      const data = response.data;
+      const data =
+        response.data;
+
+      console.log("LIST KUIS:", data);
 
       setQuizList(data);
 
@@ -92,12 +100,6 @@ export default function QuizSection() {
         setShowQuizSelection(false);
 
       } else if (data.length === 1) {
-
-        console.log("LIST KUIS", data);
-        console.log(
-          "AUTO PILIH",
-          data[0].id_kuis
-        );
 
         setSelectedQuiz(
           data[0].id_kuis
@@ -113,7 +115,9 @@ export default function QuizSection() {
       }
 
     } catch (error) {
+
       console.log(error);
+
     }
   }
 
@@ -133,8 +137,19 @@ export default function QuizSection() {
         );
 
       console.log(
-        "DATA SOAL:",
+        "================================="
+      );
+
+      console.log(
+        "DATA SOAL DARI BACKEND:"
+      );
+
+      console.log(
         response.data
+      );
+
+      console.log(
+        "================================="
       );
 
       setQuestions(
@@ -143,7 +158,10 @@ export default function QuizSection() {
 
     } catch (error) {
 
-      console.log(error);
+      console.log(
+        "ERROR FETCH SOAL:",
+        error
+      );
 
       setError(
         "Gagal mengambil soal kuis."
@@ -254,17 +272,19 @@ export default function QuizSection() {
       siswa.nama
     );
 
+    setAnswers([]);
+    setCorrectAnswers(0);
+    setIdx(0);
+    setSelected(null);
+    setDone(false);
+    setNilaiAkhir(0);
+
     await fetchQuestions(
       selectedQuiz
     );
 
     setError("");
     setStarted(true);
-    setAnswers([]);
-    setCorrectAnswers(0);
-    setIdx(0);
-    setSelected(null);
-    setDone(false);
   }
 
   // =========================
@@ -272,15 +292,28 @@ export default function QuizSection() {
   // =========================
   async function handleNext() {
 
-    if (selected === null) {
+    if (
+      selected === null
+    ) {
       return;
     }
 
     // =========================
-    // KONVERSI INDEX KE HURUF
+    // KONVERSI INDEX
+    // KE HURUF
     // =========================
     const jawabanHuruf =
       letters[selected];
+
+    console.log(
+      "Jawaban dipilih:",
+      jawabanHuruf
+    );
+
+    console.log(
+      "Jawaban benar:",
+      current.answer
+    );
 
     // =========================
     // SIMPAN JAWABAN
@@ -306,6 +339,18 @@ export default function QuizSection() {
     let newCorrect =
       correctAnswers;
 
+    /*
+    |--------------------------------------------------------------------------
+    | PERBAIKAN
+    |--------------------------------------------------------------------------
+    | selected = index
+    | current.answer = A/B/C/D
+    |
+    | Jadi harus dibandingkan menggunakan
+    | jawabanHuruf.
+    |--------------------------------------------------------------------------
+    */
+
     if (
       jawabanHuruf ===
       current.answer
@@ -324,7 +369,7 @@ export default function QuizSection() {
     setSelected(null);
 
     // =========================
-    // NEXT SOAL
+    // SOAL BERIKUTNYA
     // =========================
     if (
       idx + 1 <
@@ -335,61 +380,85 @@ export default function QuizSection() {
         idx + 1
       );
 
-    } else {
+      return;
+    }
 
-      if (submitting) {
-        return;
-      }
+    // =========================
+    // SOAL TERAKHIR
+    // =========================
+    if (submitting) {
+      return;
+    }
 
-      setSubmitting(true);
+    setSubmitting(true);
 
-      try {
+    try {
 
-        const siswa =
-          students.find(
-            (item) =>
-              item.nis ===
-              selectedStudent
-          );
-
-        const response =
-          await axiosInstance.post(
-            "/kuis/submit",
-            {
-              id_siswa:
-                siswa.id_siswa,
-
-              id_kuis:
-                selectedQuiz,
-
-              jawaban:
-                newAnswers,
-            }
-          );
-
-        console.log(
-          response.data
+      // =========================
+      // CARI SISWA
+      // =========================
+      const siswa =
+        students.find(
+          (item) =>
+            item.nis ===
+            selectedStudent
         );
 
-        setNilaiAkhir(
-          response.data.nilai
-        );
-
-        setDone(true);
-
-      } catch (error) {
-
-        console.log(error);
+      if (!siswa) {
 
         alert(
-          "Gagal menyimpan jawaban"
+          "Data siswa tidak ditemukan."
         );
-
-      } finally {
 
         setSubmitting(false);
 
+        return;
       }
+
+      // =========================
+      // SUBMIT
+      // =========================
+      const response =
+        await axiosInstance.post(
+          "/kuis/submit",
+          {
+            id_siswa:
+              siswa.id_siswa,
+
+            id_kuis:
+              selectedQuiz,
+
+            jawaban:
+              newAnswers,
+          }
+        );
+
+      console.log(
+        "HASIL SUBMIT:",
+        response.data
+      );
+
+      setNilaiAkhir(
+        response.data.nilai
+      );
+
+      setDone(true);
+
+    } catch (error) {
+
+      console.log(
+        "ERROR SUBMIT:",
+        error
+      );
+
+      alert(
+        "Gagal menyimpan jawaban"
+      );
+
+    } finally {
+
+      setSubmitting(false);
+
     }
   }
 
@@ -422,7 +491,7 @@ export default function QuizSection() {
   }
 
   // =========================
-  // LOADING SOAL
+  // LOADING
   // =========================
   if (
     started &&
@@ -432,7 +501,7 @@ export default function QuizSection() {
     return (
       <div className="py-20 text-center">
 
-        <p className="text-lg font-semibold text-ink">
+        <p className="text-lg font-semibold">
           Memuat soal...
         </p>
 
@@ -441,7 +510,7 @@ export default function QuizSection() {
   }
 
   // =========================
-  // SOAL TIDAK DITEMUKAN
+  // SOAL KOSONG
   // =========================
   if (
     started &&
@@ -461,6 +530,7 @@ export default function QuizSection() {
   }
 
   return (
+
     <section
       id="kuis"
       className="py-24 bg-brand-secondary/5"
@@ -483,6 +553,7 @@ export default function QuizSection() {
 
         </div>
 
+
         {/* =========================
             CARD
         ========================= */}
@@ -501,7 +572,9 @@ export default function QuizSection() {
 
               <div className="space-y-5">
 
-                {/* DROPDOWN SISWA */}
+                {/* =========================
+                    SISWA
+                ========================= */}
                 <div>
 
                   <label className="block text-sm font-bold text-ink mb-2">
@@ -555,8 +628,7 @@ export default function QuizSection() {
                     0 && (
 
                     <p className="text-red-500 text-sm mt-2">
-                      Belum ada kuis
-                      yang aktif.
+                      Belum ada kuis yang aktif.
                     </p>
 
                   )}
@@ -572,7 +644,10 @@ export default function QuizSection() {
 
                 </div>
 
-                {/* PILIH KUIS */}
+
+                {/* =========================
+                    PILIH KUIS
+                ========================= */}
                 {showQuizSelection && (
 
                   <div>
@@ -622,7 +697,10 @@ export default function QuizSection() {
 
                 )}
 
-                {/* BUTTON MULAI */}
+
+                {/* =========================
+                    BUTTON MULAI
+                ========================= */}
                 <button
                   onClick={
                     startQuiz
@@ -667,6 +745,7 @@ export default function QuizSection() {
 
               </div>
 
+
               {/* =========================
                   INFO SISWA
               ========================= */}
@@ -684,7 +763,10 @@ export default function QuizSection() {
 
                 </div>
 
-                {/* PROGRESS */}
+
+                {/* =========================
+                    PROGRESS
+                ========================= */}
                 <div className="text-right shrink-0">
 
                   <div className="flex items-center justify-between gap-4 text-xs text-ink-soft mb-1">
@@ -699,6 +781,7 @@ export default function QuizSection() {
                     </span>
 
                   </div>
+
 
                   <div className="w-28 sm:w-36 h-2 bg-muted rounded-full overflow-hidden">
 
@@ -715,6 +798,7 @@ export default function QuizSection() {
 
               </div>
 
+
               {/* =========================
                   QUESTION
               ========================= */}
@@ -729,6 +813,7 @@ export default function QuizSection() {
                     Soal {idx + 1}
                   </p>
 
+
                   {/* TEKS PERTANYAAN */}
                   {current.q && (
 
@@ -737,6 +822,7 @@ export default function QuizSection() {
                     </p>
 
                   )}
+
 
                   {/* GAMBAR PERTANYAAN */}
                   {current.gambar_pertanyaan && (
@@ -752,12 +838,15 @@ export default function QuizSection() {
                         }`}
                         className="max-h-80 max-w-full rounded-2xl object-contain border border-border shadow-sm"
                         onError={(e) => {
+
                           console.error(
-                            "Gagal memuat gambar pertanyaan:",
+                            "Gambar pertanyaan gagal dimuat:",
                             current.gambar_pertanyaan
                           );
+
                           e.currentTarget.style.display =
                             "none";
+
                         }}
                       />
 
@@ -767,6 +856,7 @@ export default function QuizSection() {
 
                 </div>
 
+
                 {/* =========================
                     OPTIONS
                 ========================= */}
@@ -775,27 +865,16 @@ export default function QuizSection() {
                   {current.options?.map(
                     (opt, i) => {
 
-                      const optionLetter =
-                        letters[i];
-
                       /*
                       |--------------------------------------------------------------------------
-                      | PERBAIKAN PENTING
-                      |--------------------------------------------------------------------------
-                      | Backend mengirim:
+                      | BACKEND:
                       |
                       | options: [
                       |   {
                       |      text: "...",
-                      |      image: "https://..."
+                      |      image: "..."
                       |   }
                       | ]
-                      |
-                      | Jadi gambar harus diambil dari:
-                      | opt.image
-                      |
-                      | dan teks dari:
-                      | opt.text
                       |--------------------------------------------------------------------------
                       */
 
@@ -805,11 +884,12 @@ export default function QuizSection() {
                       const optionImage =
                         opt?.image || null;
 
+
                       return (
 
                         <button
                           key={
-                            optionLetter
+                            letters[i]
                           }
                           type="button"
                           onClick={() =>
@@ -825,10 +905,10 @@ export default function QuizSection() {
                         >
 
                           {/* LABEL + TEKS */}
-                          <div className="flex items-start gap-2">
+                          <div className="flex items-start">
 
-                            <span className="shrink-0 font-display font-bold text-brand-secondary">
-                              {optionLetter}.
+                            <span className="font-display font-bold text-brand-secondary mr-2 shrink-0">
+                              {letters[i]}.
                             </span>
 
                             {optionText && (
@@ -841,7 +921,10 @@ export default function QuizSection() {
 
                           </div>
 
-                          {/* GAMBAR PILIHAN */}
+
+                          {/* =========================
+                              GAMBAR PILIHAN
+                          ========================= */}
                           {optionImage && (
 
                             <div className="mt-4 flex justify-center">
@@ -850,15 +933,20 @@ export default function QuizSection() {
                                 src={
                                   optionImage
                                 }
-                                alt={`Gambar pilihan ${optionLetter}`}
+                                alt={`Gambar pilihan ${
+                                  letters[i]
+                                }`}
                                 className="max-h-52 max-w-full rounded-xl object-contain border border-border"
                                 onError={(e) => {
+
                                   console.error(
-                                    `Gagal memuat gambar pilihan ${optionLetter}:`,
+                                    `Gambar pilihan ${letters[i]} gagal dimuat:`,
                                     optionImage
                                   );
+
                                   e.currentTarget.style.display =
                                     "none";
+
                                 }}
                               />
 
@@ -874,6 +962,7 @@ export default function QuizSection() {
                   )}
 
                 </div>
+
 
                 {/* =========================
                     BUTTON NEXT
@@ -921,20 +1010,24 @@ export default function QuizSection() {
 
               </div>
 
+
               {/* TITLE */}
               <h3 className="font-display text-3xl font-bold text-ink mb-2">
                 {judulKuis} Selesai 🎉
               </h3>
+
 
               {/* NAMA */}
               <p className="text-lg font-bold text-ink">
                 {nama}
               </p>
 
+
               {/* NIS */}
               <p className="text-ink-soft mb-6">
                 NIS: {nis}
               </p>
+
 
               {/* NILAI */}
               <p className="text-ink-soft mb-3">
@@ -944,6 +1037,7 @@ export default function QuizSection() {
               <div className="font-display text-6xl font-bold text-brand-primary mb-3">
                 {nilaiAkhir}
               </div>
+
 
               {/* BUTTON */}
               <button
