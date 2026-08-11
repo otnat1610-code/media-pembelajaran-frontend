@@ -94,10 +94,7 @@ export default function Kuis() {
   // =====================================================
 
   const [soalList, setSoalList] = useState(
-    Array.from(
-      { length: 5 },
-      () => createDefaultSoal()
-    )
+    Array.from({ length: 5 }, () => createDefaultSoal())
   );
 
   // =====================================================
@@ -119,9 +116,7 @@ export default function Kuis() {
       const response = await axiosInstance.get("/admin/kuis");
 
       setDataKuis(
-        Array.isArray(response.data)
-          ? response.data
-          : []
+        Array.isArray(response.data) ? response.data : []
       );
     } catch (error) {
       console.error("ERROR FETCH KUIS:", error);
@@ -254,11 +249,7 @@ export default function Kuis() {
   // GAMBAR PILIHAN TAMBAH
   // =====================================================
 
-  const handleGambarPilihanChange = (
-    index,
-    option,
-    file
-  ) => {
+  const handleGambarPilihanChange = (index, option, file) => {
     if (!file) {
       return;
     }
@@ -298,7 +289,9 @@ export default function Kuis() {
 
       updated[index] = {
         ...updated[index],
+
         gambar_pertanyaan: null,
+
         hapus_gambar_pertanyaan: false,
       };
 
@@ -336,11 +329,7 @@ export default function Kuis() {
   // EDIT SOAL
   // =====================================================
 
-  const handleEditSoalChange = (
-    index,
-    field,
-    value
-  ) => {
+  const handleEditSoalChange = (index, field, value) => {
     setEditSoalList((prev) => {
       const updated = [...prev];
 
@@ -353,11 +342,7 @@ export default function Kuis() {
     });
   };
 
-  const handleEditPilihanChange = (
-    index,
-    option,
-    value
-  ) => {
+  const handleEditPilihanChange = (index, option, value) => {
     setEditSoalList((prev) => {
       const updated = [...prev];
 
@@ -378,10 +363,7 @@ export default function Kuis() {
   // EDIT GAMBAR PERTANYAAN
   // =====================================================
 
-  const handleEditGambarPertanyaanChange = (
-    index,
-    file
-  ) => {
+  const handleEditGambarPertanyaanChange = (index, file) => {
     if (!file) {
       return;
     }
@@ -463,10 +445,7 @@ export default function Kuis() {
     });
   };
 
-  const hapusEditGambarPilihan = (
-    index,
-    option
-  ) => {
+  const hapusEditGambarPilihan = (index, option) => {
     setEditSoalList((prev) => {
       const updated = [...prev];
 
@@ -512,10 +491,7 @@ export default function Kuis() {
 
   const hapusSoal = (index) => {
     if (soalList.length <= 5) {
-      toast.error(
-        "Minimal harus terdapat 5 soal."
-      );
-
+      toast.error("Minimal harus terdapat 5 soal.");
       return;
     }
 
@@ -526,10 +502,7 @@ export default function Kuis() {
 
   const hapusEditSoal = (index) => {
     if (editSoalList.length <= 5) {
-      toast.error(
-        "Minimal harus terdapat 5 soal."
-      );
-
+      toast.error("Minimal harus terdapat 5 soal.");
       return;
     }
 
@@ -545,24 +518,12 @@ export default function Kuis() {
   const hasImage = (image) => {
     return (
       image instanceof File ||
-      (typeof image === "string" &&
-        image.trim() !== "")
+      (typeof image === "string" && image.trim() !== "")
     );
   };
 
   // =====================================================
   // VALIDASI SOAL
-  // =====================================================
-  //
-  // PENTING:
-  // Teks TIDAK wajib jika sudah ada gambar.
-  //
-  // Pertanyaan:
-  // teks ATAU gambar
-  //
-  // Pilihan:
-  // teks ATAU gambar
-  //
   // =====================================================
 
   const isQuestionValid = (soal) => {
@@ -570,20 +531,15 @@ export default function Kuis() {
       soal?.pertanyaan || ""
     ).trim();
 
-    const adaGambarPertanyaan =
-      hasImage(
-        soal?.gambar_pertanyaan
-      );
+    const adaGambarPertanyaan = hasImage(
+      soal?.gambar_pertanyaan
+    );
 
-    // Pertanyaan boleh teks atau gambar
-    if (
-      !pertanyaan &&
-      !adaGambarPertanyaan
-    ) {
+    // Pertanyaan harus memiliki teks ATAU gambar
+    if (!pertanyaan && !adaGambarPertanyaan) {
       return false;
     }
 
-    // Pilihan A-D
     const options = ["A", "B", "C", "D"];
 
     for (const option of options) {
@@ -594,14 +550,10 @@ export default function Kuis() {
       const image =
         soal?.gambar_pilihan?.[option];
 
-      const adaGambarPilihan =
-        hasImage(image);
+      const adaGambarPilihan = hasImage(image);
 
-      // Pilihan boleh teks atau gambar
-      if (
-        !text &&
-        !adaGambarPilihan
-      ) {
+      // Pilihan harus memiliki teks ATAU gambar
+      if (!text && !adaGambarPilihan) {
         return false;
       }
     }
@@ -635,9 +587,7 @@ export default function Kuis() {
 
     formData.append(
       "status",
-      String(
-        kuisForm.status || "aktif"
-      )
+      String(kuisForm.status || "aktif")
     );
 
     formData.append(
@@ -649,146 +599,88 @@ export default function Kuis() {
     // DATA SOAL
     // ===================================================
 
-    listSoal.forEach(
-      (soal, index) => {
-        const prefix = `soal[${index}]`;
+    listSoal.forEach((soal, index) => {
+      const prefix = `soal[${index}]`;
 
-        // -------------------------------------------------
-        // ID DETAIL
-        // -------------------------------------------------
-
-        if (
-          soal.id_detail_kuis !== null &&
-          soal.id_detail_kuis !== undefined &&
-          soal.id_detail_kuis !== ""
-        ) {
-          formData.append(
-            `${prefix}[id_detail_kuis]`,
-            String(
-              soal.id_detail_kuis
-            )
-          );
-        }
-
-        // -------------------------------------------------
-        // PERTANYAAN
-        // -------------------------------------------------
-        //
-        // Selalu kirim.
-        // Bisa kosong apabila gambar digunakan.
-        //
-
+      // ID DETAIL
+      if (
+        soal.id_detail_kuis !== null &&
+        soal.id_detail_kuis !== undefined &&
+        soal.id_detail_kuis !== ""
+      ) {
         formData.append(
-          `${prefix}[pertanyaan]`,
+          `${prefix}[id_detail_kuis]`,
+          String(soal.id_detail_kuis)
+        );
+      }
+
+      // PERTANYAAN
+      formData.append(
+        `${prefix}[pertanyaan]`,
+        String(soal.pertanyaan || "")
+      );
+
+      // JAWABAN
+      formData.append(
+        `${prefix}[jawaban]`,
+        String(soal.jawaban || "A")
+      );
+
+      // PILIHAN TEKS
+      ["A", "B", "C", "D"].forEach((option) => {
+        formData.append(
+          `${prefix}[pilihan][${option}]`,
           String(
-            soal.pertanyaan || ""
+            soal.pilihan?.[option] || ""
           )
         );
+      });
 
-        // -------------------------------------------------
-        // JAWABAN BENAR
-        // -------------------------------------------------
-
+      // GAMBAR PERTANYAAN
+      if (
+        soal.gambar_pertanyaan instanceof File
+      ) {
         formData.append(
-          `${prefix}[jawaban]`,
-          String(
-            soal.jawaban || "A"
-          )
+          `${prefix}[gambar_pertanyaan]`,
+          soal.gambar_pertanyaan,
+          soal.gambar_pertanyaan.name
         );
+      }
 
-        // -------------------------------------------------
-        // PILIHAN TEKS
-        // -------------------------------------------------
-        //
-        // Jangan menggunakan required.
-        // Jika hanya gambar maka dikirim sebagai string kosong.
-        //
+      // GAMBAR PILIHAN
+      ["A", "B", "C", "D"].forEach((option) => {
+        const image =
+          soal.gambar_pilihan?.[option];
 
-        ["A", "B", "C", "D"].forEach(
-          (option) => {
-            formData.append(
-              `${prefix}[pilihan][${option}]`,
-              String(
-                soal.pilihan?.[
-                  option
-                ] || ""
-              )
-            );
-          }
-        );
-
-        // -------------------------------------------------
-        // GAMBAR PERTANYAAN
-        // -------------------------------------------------
-
-        if (
-          soal.gambar_pertanyaan instanceof
-          File
-        ) {
+        if (image instanceof File) {
           formData.append(
-            `${prefix}[gambar_pertanyaan]`,
-            soal.gambar_pertanyaan,
-            soal.gambar_pertanyaan.name
+            `${prefix}[gambar_pilihan][${option}]`,
+            image,
+            image.name
           );
         }
+      });
 
-        // -------------------------------------------------
-        // GAMBAR PILIHAN
-        // -------------------------------------------------
-
-        ["A", "B", "C", "D"].forEach(
-          (option) => {
-            const image =
-              soal.gambar_pilihan?.[
-                option
-              ];
-
-            if (
-              image instanceof File
-            ) {
-              formData.append(
-                `${prefix}[gambar_pilihan][${option}]`,
-                image,
-                image.name
-              );
-            }
-          }
+      // HAPUS GAMBAR PERTANYAAN
+      if (soal.hapus_gambar_pertanyaan) {
+        formData.append(
+          `${prefix}[hapus_gambar_pertanyaan]`,
+          "1"
         );
+      }
 
-        // -------------------------------------------------
-        // HAPUS GAMBAR PERTANYAAN
-        // -------------------------------------------------
-
+      // HAPUS GAMBAR PILIHAN
+      ["A", "B", "C", "D"].forEach((option) => {
         if (
-          soal.hapus_gambar_pertanyaan
+          soal.hapus_gambar_pilihan?.[option]
         ) {
           formData.append(
-            `${prefix}[hapus_gambar_pertanyaan]`,
+            `${prefix}[hapus_gambar_pilihan][${option}]`,
             "1"
           );
         }
-
-        // -------------------------------------------------
-        // HAPUS GAMBAR PILIHAN
-        // -------------------------------------------------
-
-        ["A", "B", "C", "D"].forEach(
-          (option) => {
-            if (
-              soal
-                .hapus_gambar_pilihan?.[
-                option
-              ]
-            ) {
-              formData.append(
-                `${prefix}[hapus_gambar_pilihan][${option}]`,
-                "1"
-              );
-            }
-          }
-        );
-      }
-    );
+      });
+    });
 
     return formData;
   };
@@ -802,10 +694,7 @@ export default function Kuis() {
       "========== FORMDATA KUIS =========="
     );
 
-    for (const [
-      key,
-      value,
-    ] of formData.entries()) {
+    for (const [key, value] of formData.entries()) {
       if (value instanceof File) {
         console.log(
           key,
@@ -815,11 +704,7 @@ export default function Kuis() {
           value.size
         );
       } else {
-        console.log(
-          key,
-          "=>",
-          value
-        );
+        console.log(key, "=>", value);
       }
     }
 
@@ -835,81 +720,49 @@ export default function Kuis() {
   const handleTambah = async (e) => {
     e.preventDefault();
 
-    // ---------------------------------------------------
     // VALIDASI JUDUL
-    // ---------------------------------------------------
-
-    if (
-      !String(form.judul || "")
-        .trim()
-    ) {
+    if (!String(form.judul || "").trim()) {
       toast.error(
         "Judul kuis tidak boleh kosong."
       );
-
       return;
     }
 
-    // ---------------------------------------------------
     // VALIDASI MINIMAL SOAL
-    // ---------------------------------------------------
-
     if (soalList.length < 5) {
       toast.error(
         "Minimal harus terdapat 5 soal."
       );
-
       return;
     }
 
-    // ---------------------------------------------------
     // VALIDASI ISI SOAL
-    // ---------------------------------------------------
-
     const invalidIndex =
       soalList.findIndex(
-        (soal) =>
-          !isQuestionValid(soal)
+        (soal) => !isQuestionValid(soal)
       );
 
     if (invalidIndex !== -1) {
       toast.error(
-        `Soal ${
-          invalidIndex + 1
-        } belum lengkap. Pertanyaan dan setiap pilihan harus memiliki teks atau gambar.`
+        `Soal ${invalidIndex + 1} belum lengkap. Pertanyaan dan setiap pilihan harus memiliki teks atau gambar.`
       );
-
       return;
     }
 
     try {
-      const formData =
-        createKuisFormData(
-          form,
-          soalList
-        );
+      const formData = createKuisFormData(
+        form,
+        soalList
+      );
 
-      // Debug sementara
       debugFormData(formData);
-
-      // -------------------------------------------------
-      // POST
-      // -------------------------------------------------
 
       await axiosInstance.post(
         "/kuis",
         formData
       );
 
-      // -------------------------------------------------
-      // REFRESH DATA
-      // -------------------------------------------------
-
       await fetchKuis();
-
-      // -------------------------------------------------
-      // RESET
-      // -------------------------------------------------
 
       setForm({
         judul: "",
@@ -977,14 +830,11 @@ export default function Kuis() {
     setEditForm({
       id_kuis: kuis.id_kuis,
 
-      judul:
-        kuis.judul || "",
+      judul: kuis.judul || "",
 
-      deskripsi:
-        kuis.deskripsi || "",
+      deskripsi: kuis.deskripsi || "",
 
-      status:
-        kuis.status || "aktif",
+      status: kuis.status || "aktif",
     });
 
     const formatted = (
@@ -997,33 +847,20 @@ export default function Kuis() {
         item.pertanyaan || "",
 
       gambar_pertanyaan:
-        item.gambar_pertanyaan ||
-        null,
+        item.gambar_pertanyaan || null,
 
       pilihan: {
-        A:
-          item.pilihan_a || "",
-        B:
-          item.pilihan_b || "",
-        C:
-          item.pilihan_c || "",
-        D:
-          item.pilihan_d || "",
+        A: item.pilihan_a || "",
+        B: item.pilihan_b || "",
+        C: item.pilihan_c || "",
+        D: item.pilihan_d || "",
       },
 
       gambar_pilihan: {
-        A:
-          item.gambar_pilihan_a ||
-          null,
-        B:
-          item.gambar_pilihan_b ||
-          null,
-        C:
-          item.gambar_pilihan_c ||
-          null,
-        D:
-          item.gambar_pilihan_d ||
-          null,
+        A: item.gambar_pilihan_a || null,
+        B: item.gambar_pilihan_b || null,
+        C: item.gambar_pilihan_c || null,
+        D: item.gambar_pilihan_d || null,
       },
 
       jawaban:
@@ -1052,71 +889,49 @@ export default function Kuis() {
   const handleUpdate = async (e) => {
     e.preventDefault();
 
-    // ---------------------------------------------------
     // VALIDASI JUDUL
-    // ---------------------------------------------------
-
     if (
-      !String(editForm.judul || "")
-        .trim()
+      !String(editForm.judul || "").trim()
     ) {
       toast.error(
         "Judul kuis tidak boleh kosong."
       );
-
       return;
     }
 
-    // ---------------------------------------------------
     // VALIDASI MINIMAL SOAL
-    // ---------------------------------------------------
-
-    if (
-      editSoalList.length < 5
-    ) {
+    if (editSoalList.length < 5) {
       toast.error(
         "Minimal harus terdapat 5 soal."
       );
-
       return;
     }
 
-    // ---------------------------------------------------
     // VALIDASI SOAL
-    // ---------------------------------------------------
-
     const invalidIndex =
       editSoalList.findIndex(
-        (soal) =>
-          !isQuestionValid(soal)
+        (soal) => !isQuestionValid(soal)
       );
 
     if (invalidIndex !== -1) {
       toast.error(
-        `Soal ${
-          invalidIndex + 1
-        } belum lengkap. Pertanyaan dan setiap pilihan harus memiliki teks atau gambar.`
+        `Soal ${invalidIndex + 1} belum lengkap. Pertanyaan dan setiap pilihan harus memiliki teks atau gambar.`
       );
-
       return;
     }
 
     try {
-      const formData =
-        createKuisFormData(
-          editForm,
-          editSoalList
-        );
+      const formData = createKuisFormData(
+        editForm,
+        editSoalList
+      );
 
-      // Laravel membutuhkan method spoofing
-      // karena multipart/form-data + PUT
-
+      // Laravel method spoofing
       formData.append(
         "_method",
         "PUT"
       );
 
-      // Debug sementara
       debugFormData(formData);
 
       await axiosInstance.post(
@@ -1176,10 +991,9 @@ export default function Kuis() {
   // =====================================================
 
   const handleDelete = async (id) => {
-    const yakin =
-      window.confirm(
-        "Apakah Anda yakin ingin menghapus kuis ini?"
-      );
+    const yakin = window.confirm(
+      "Apakah Anda yakin ingin menghapus kuis ini?"
+    );
 
     if (!yakin) {
       return;
@@ -1229,9 +1043,7 @@ export default function Kuis() {
   }) => {
     let preview = null;
 
-    if (
-      value instanceof File
-    ) {
+    if (value instanceof File) {
       preview =
         URL.createObjectURL(value);
     } else if (
@@ -1313,6 +1125,7 @@ export default function Kuis() {
 
   return (
     <div className="space-y-6">
+
       {/* =================================================
           HEADER
       ================================================= */}
@@ -1396,30 +1209,26 @@ export default function Kuis() {
                   </td>
 
                   <td className="px-5 py-3 text-slate-600">
-                    {kuis.deskripsi ||
-                      "-"}
+                    {kuis.deskripsi || "-"}
                   </td>
 
                   <td className="px-5 py-3">
                     <span className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
                       <BookOpen className="h-4 w-4" />
 
-                      {kuis.total_soal}{" "}
-                      Soal
+                      {kuis.total_soal} Soal
                     </span>
                   </td>
 
                   <td className="px-5 py-3">
                     <span
                       className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                        kuis.status ===
-                        "aktif"
+                        kuis.status === "aktif"
                           ? "bg-green-100 text-green-700"
                           : "bg-yellow-100 text-yellow-700"
                       }`}
                     >
-                      {kuis.status ===
-                      "aktif"
+                      {kuis.status === "aktif"
                         ? "Aktif"
                         : "Draft"}
                     </span>
@@ -1430,9 +1239,7 @@ export default function Kuis() {
                       <Button
                         variant="outline"
                         onClick={() =>
-                          handleOpenEdit(
-                            kuis
-                          )
+                          handleOpenEdit(kuis)
                         }
                       >
                         <Pencil className="h-4 w-4" />
@@ -1441,9 +1248,7 @@ export default function Kuis() {
                       <Button
                         variant="outline"
                         onClick={() =>
-                          handleOpenDetail(
-                            kuis
-                          )
+                          handleOpenDetail(kuis)
                         }
                       >
                         <Eye className="h-4 w-4" />
@@ -1476,6 +1281,7 @@ export default function Kuis() {
       {showTambahModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 p-4">
           <div className="mx-auto w-full max-w-6xl rounded-2xl bg-white shadow-xl">
+
             <div className="flex items-center justify-between border-b px-6 py-4">
               <div>
                 <h2 className="text-xl font-bold text-slate-800">
@@ -1490,9 +1296,7 @@ export default function Kuis() {
               <button
                 type="button"
                 onClick={() =>
-                  setShowTambahModal(
-                    false
-                  )
+                  setShowTambahModal(false)
                 }
                 className="rounded-lg p-2 hover:bg-slate-100"
               >
@@ -1504,9 +1308,11 @@ export default function Kuis() {
               onSubmit={handleTambah}
               className="max-h-[85vh] overflow-y-auto p-6"
             >
+
               {/* INFO KUIS */}
 
               <div className="grid gap-4 md:grid-cols-2">
+
                 <div>
                   <label className="mb-2 block text-sm font-semibold">
                     Judul Kuis
@@ -1516,9 +1322,7 @@ export default function Kuis() {
                     type="text"
                     name="judul"
                     value={form.judul}
-                    onChange={
-                      handleFormChange
-                    }
+                    onChange={handleFormChange}
                     className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500"
                     placeholder="Masukkan judul kuis"
                   />
@@ -1532,9 +1336,7 @@ export default function Kuis() {
                   <select
                     name="status"
                     value={form.status}
-                    onChange={
-                      handleFormChange
-                    }
+                    onChange={handleFormChange}
                     className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none"
                   >
                     <option value="aktif">
@@ -1546,6 +1348,7 @@ export default function Kuis() {
                     </option>
                   </select>
                 </div>
+
               </div>
 
               <div className="mt-4">
@@ -1555,12 +1358,8 @@ export default function Kuis() {
 
                 <textarea
                   name="deskripsi"
-                  value={
-                    form.deskripsi
-                  }
-                  onChange={
-                    handleFormChange
-                  }
+                  value={form.deskripsi}
+                  onChange={handleFormChange}
                   rows="3"
                   className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500"
                   placeholder="Deskripsi kuis"
@@ -1576,20 +1375,17 @@ export default function Kuis() {
                       key={index}
                       className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
                     >
+
                       <div className="mb-5 flex items-center justify-between">
                         <h3 className="text-lg font-bold text-slate-800">
-                          Soal{" "}
-                          {index + 1}
+                          Soal {index + 1}
                         </h3>
 
-                        {soalList.length >
-                          5 && (
+                        {soalList.length > 5 && (
                           <button
                             type="button"
                             onClick={() =>
-                              hapusSoal(
-                                index
-                              )
+                              hapusSoal(index)
                             }
                             className="rounded-lg p-2 text-red-500 hover:bg-red-50"
                           >
@@ -1601,9 +1397,7 @@ export default function Kuis() {
                       {/* PERTANYAAN */}
 
                       <textarea
-                        value={
-                          soal.pertanyaan
-                        }
+                        value={soal.pertanyaan}
                         onChange={(e) =>
                           handleSoalChange(
                             index,
@@ -1637,38 +1431,30 @@ export default function Kuis() {
                       {/* PILIHAN */}
 
                       <div className="mt-6 grid gap-5 md:grid-cols-2">
-                        {[
-                          "A",
-                          "B",
-                          "C",
-                          "D",
-                        ].map(
+
+                        {["A", "B", "C", "D"].map(
                           (option) => (
                             <div
                               key={option}
                               className="rounded-xl border border-slate-200 bg-white p-4"
                             >
+
                               <label className="mb-2 block font-bold">
-                                Pilihan{" "}
-                                {option}
+                                Pilihan {option}
                               </label>
 
                               <input
                                 type="text"
                                 value={
-                                  soal
-                                    .pilihan[
+                                  soal.pilihan[
                                     option
                                   ]
                                 }
-                                onChange={(
-                                  e
-                                ) =>
+                                onChange={(e) =>
                                   handlePilihanChange(
                                     index,
                                     option,
-                                    e.target
-                                      .value
+                                    e.target.value
                                   )
                                 }
                                 className="w-full rounded-xl border border-slate-300 px-4 py-3"
@@ -1683,9 +1469,7 @@ export default function Kuis() {
                                     option
                                   ]
                                 }
-                                onChange={(
-                                  file
-                                ) =>
+                                onChange={(file) =>
                                   handleGambarPilihanChange(
                                     index,
                                     option,
@@ -1699,9 +1483,11 @@ export default function Kuis() {
                                   )
                                 }
                               />
+
                             </div>
                           )
                         )}
+
                       </div>
 
                       {/* JAWABAN */}
@@ -1712,9 +1498,7 @@ export default function Kuis() {
                         </label>
 
                         <select
-                          value={
-                            soal.jawaban
-                          }
+                          value={soal.jawaban}
                           onChange={(e) =>
                             handleSoalChange(
                               index,
@@ -1741,6 +1525,7 @@ export default function Kuis() {
                           </option>
                         </select>
                       </div>
+
                     </div>
                   )
                 )}
@@ -1749,6 +1534,7 @@ export default function Kuis() {
               {/* BUTTON */}
 
               <div className="mt-6 flex flex-wrap justify-end gap-3">
+
                 <button
                   type="button"
                   onClick={tambahSoal}
@@ -1767,7 +1553,9 @@ export default function Kuis() {
 
                   Simpan Kuis
                 </button>
+
               </div>
+
             </form>
           </div>
         </div>
@@ -1779,8 +1567,11 @@ export default function Kuis() {
 
       {showEditModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 p-4">
+
           <div className="mx-auto w-full max-w-6xl rounded-2xl bg-white shadow-xl">
+
             <div className="flex items-center justify-between border-b px-6 py-4">
+
               <div>
                 <h2 className="text-xl font-bold text-slate-800">
                   Edit Kuis
@@ -1800,13 +1591,16 @@ export default function Kuis() {
               >
                 <X className="h-5 w-5" />
               </button>
+
             </div>
 
             <form
               onSubmit={handleUpdate}
               className="max-h-[85vh] overflow-y-auto p-6"
             >
+
               <div className="grid gap-4 md:grid-cols-2">
+
                 <div>
                   <label className="mb-2 block text-sm font-semibold">
                     Judul Kuis
@@ -1815,12 +1609,8 @@ export default function Kuis() {
                   <input
                     type="text"
                     name="judul"
-                    value={
-                      editForm.judul
-                    }
-                    onChange={
-                      handleEditChange
-                    }
+                    value={editForm.judul}
+                    onChange={handleEditChange}
                     className="w-full rounded-xl border border-slate-300 px-4 py-3"
                   />
                 </div>
@@ -1832,12 +1622,8 @@ export default function Kuis() {
 
                   <select
                     name="status"
-                    value={
-                      editForm.status
-                    }
-                    onChange={
-                      handleEditChange
-                    }
+                    value={editForm.status}
+                    onChange={handleEditChange}
                     className="w-full rounded-xl border border-slate-300 px-4 py-3"
                   >
                     <option value="aktif">
@@ -1849,6 +1635,7 @@ export default function Kuis() {
                     </option>
                   </select>
                 </div>
+
               </div>
 
               <div className="mt-4">
@@ -1858,18 +1645,15 @@ export default function Kuis() {
 
                 <textarea
                   name="deskripsi"
-                  value={
-                    editForm.deskripsi
-                  }
-                  onChange={
-                    handleEditChange
-                  }
+                  value={editForm.deskripsi}
+                  onChange={handleEditChange}
                   rows="3"
                   className="w-full rounded-xl border border-slate-300 px-4 py-3"
                 />
               </div>
 
               <div className="mt-8 space-y-6">
+
                 {editSoalList.map(
                   (soal, index) => (
                     <div
@@ -1879,14 +1663,14 @@ export default function Kuis() {
                       }
                       className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
                     >
+
                       <div className="mb-5 flex items-center justify-between">
+
                         <h3 className="text-lg font-bold">
-                          Soal{" "}
-                          {index + 1}
+                          Soal {index + 1}
                         </h3>
 
-                        {editSoalList.length >
-                          5 && (
+                        {editSoalList.length > 5 && (
                           <button
                             type="button"
                             onClick={() =>
@@ -1899,12 +1683,11 @@ export default function Kuis() {
                             <Trash2 className="h-5 w-5" />
                           </button>
                         )}
+
                       </div>
 
                       <textarea
-                        value={
-                          soal.pertanyaan
-                        }
+                        value={soal.pertanyaan}
                         onChange={(e) =>
                           handleEditSoalChange(
                             index,
@@ -1936,38 +1719,30 @@ export default function Kuis() {
                       />
 
                       <div className="mt-6 grid gap-5 md:grid-cols-2">
-                        {[
-                          "A",
-                          "B",
-                          "C",
-                          "D",
-                        ].map(
+
+                        {["A", "B", "C", "D"].map(
                           (option) => (
                             <div
                               key={option}
                               className="rounded-xl border border-slate-200 bg-white p-4"
                             >
+
                               <label className="mb-2 block font-bold">
-                                Pilihan{" "}
-                                {option}
+                                Pilihan {option}
                               </label>
 
                               <input
                                 type="text"
                                 value={
-                                  soal
-                                    .pilihan[
+                                  soal.pilihan[
                                     option
                                   ]
                                 }
-                                onChange={(
-                                  e
-                                ) =>
+                                onChange={(e) =>
                                   handleEditPilihanChange(
                                     index,
                                     option,
-                                    e.target
-                                      .value
+                                    e.target.value
                                   )
                                 }
                                 className="w-full rounded-xl border border-slate-300 px-4 py-3"
@@ -1982,9 +1757,7 @@ export default function Kuis() {
                                     option
                                   ]
                                 }
-                                onChange={(
-                                  file
-                                ) =>
+                                onChange={(file) =>
                                   handleEditGambarPilihanChange(
                                     index,
                                     option,
@@ -1998,20 +1771,21 @@ export default function Kuis() {
                                   )
                                 }
                               />
+
                             </div>
                           )
                         )}
+
                       </div>
 
                       <div className="mt-5">
+
                         <label className="mb-2 block text-sm font-semibold">
                           Jawaban Benar
                         </label>
 
                         <select
-                          value={
-                            soal.jawaban
-                          }
+                          value={soal.jawaban}
                           onChange={(e) =>
                             handleEditSoalChange(
                               index,
@@ -2037,18 +1811,20 @@ export default function Kuis() {
                             Pilihan D
                           </option>
                         </select>
+
                       </div>
+
                     </div>
                   )
                 )}
+
               </div>
 
               <div className="mt-6 flex flex-wrap justify-end gap-3">
+
                 <button
                   type="button"
-                  onClick={
-                    tambahEditSoal
-                  }
+                  onClick={tambahEditSoal}
                   className="flex items-center gap-2 rounded-xl bg-blue-100 px-5 py-3 font-semibold text-blue-700 hover:bg-blue-200"
                 >
                   <Plus className="h-5 w-5" />
@@ -2062,8 +1838,11 @@ export default function Kuis() {
                 >
                   Update Kuis
                 </button>
+
               </div>
+
             </form>
+
           </div>
         </div>
       )}
@@ -2072,159 +1851,154 @@ export default function Kuis() {
           MODAL DETAIL / PREVIEW
       ================================================= */}
 
-      {showDetailModal &&
-        detailKuis && (
-          <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 p-4">
-            <div className="mx-auto w-full max-w-5xl rounded-2xl bg-white shadow-xl">
-              <div className="flex items-center justify-between border-b px-6 py-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-800">
-                    Detail Kuis
-                  </h2>
+      {showDetailModal && detailKuis && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 p-4">
 
-                  <p className="text-sm text-slate-500">
-                    Preview data yang sudah tersimpan di database.
-                  </p>
-                </div>
+          <div className="mx-auto w-full max-w-5xl rounded-2xl bg-white shadow-xl">
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowDetailModal(
-                      false
-                    )
-                  }
-                  className="rounded-lg p-2 hover:bg-slate-100"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+            <div className="flex items-center justify-between border-b px-6 py-4">
+
+              <div>
+                <h2 className="text-2xl font-bold text-slate-800">
+                  Detail Kuis
+                </h2>
+
+                <p className="text-sm text-slate-500">
+                  Preview data yang sudah tersimpan di database.
+                </p>
               </div>
 
-              <div className="max-h-[85vh] overflow-y-auto p-6">
-                <div className="rounded-2xl border bg-slate-50 p-5">
-                  <h3 className="text-xl font-bold">
-                    {detailKuis.judul}
-                  </h3>
+              <button
+                type="button"
+                onClick={() =>
+                  setShowDetailModal(false)
+                }
+                className="rounded-lg p-2 hover:bg-slate-100"
+              >
+                <X className="h-5 w-5" />
+              </button>
 
-                  <p className="mt-2 text-slate-600">
-                    {detailKuis.deskripsi ||
-                      "-"}
-                  </p>
-                </div>
+            </div>
 
-                <div className="mt-6 space-y-5">
-                  {(
-                    detailKuis.detail_kuis ||
-                    []
-                  ).map(
-                    (soal, index) => (
-                      <div
-                        key={
-                          soal.id_detail_kuis ||
-                          index
-                        }
-                        className="rounded-2xl border border-slate-200 p-5"
-                      >
-                        <div className="mb-4 flex items-center justify-between">
-                          <h3 className="text-lg font-bold">
-                            Soal{" "}
-                            {index + 1}
-                          </h3>
+            <div className="max-h-[85vh] overflow-y-auto p-6">
 
-                          <span className="font-semibold text-green-600">
-                            Jawaban:{" "}
-                            {soal.jawaban}
-                          </span>
-                        </div>
+              <div className="rounded-2xl border bg-slate-50 p-5">
 
-                        {/* PERTANYAAN */}
+                <h3 className="text-xl font-bold">
+                  {detailKuis.judul}
+                </h3>
 
-                        {soal.pertanyaan && (
-                          <p className="leading-relaxed text-slate-700">
-                            {
-                              soal.pertanyaan
-                            }
-                          </p>
-                        )}
+                <p className="mt-2 text-slate-600">
+                  {detailKuis.deskripsi || "-"}
+                </p>
 
-                        {soal.gambar_pertanyaan && (
-                          <div className="mt-4">
-                            <img
-                              src={
-                                soal.gambar_pertanyaan
-                              }
-                              alt={`Gambar soal ${
-                                index + 1
-                              }`}
-                              className="max-h-72 max-w-full rounded-xl border border-slate-200 object-contain"
-                            />
-                          </div>
-                        )}
+              </div>
 
-                        {/* PILIHAN */}
+              <div className="mt-6 space-y-5">
 
-                        <div className="mt-5 grid gap-4 md:grid-cols-2">
-                          {[
-                            "A",
-                            "B",
-                            "C",
-                            "D",
-                          ].map(
-                            (option) => {
-                              const text =
-                                soal[
-                                  `pilihan_${option.toLowerCase()}`
-                                ];
+                {(detailKuis.detail_kuis || []).map(
+                  (soal, index) => (
+                    <div
+                      key={
+                        soal.id_detail_kuis ||
+                        index
+                      }
+                      className="rounded-2xl border border-slate-200 p-5"
+                    >
 
-                              const image =
-                                soal[
-                                  `gambar_pilihan_${option.toLowerCase()}`
-                                ];
+                      <div className="mb-4 flex items-center justify-between">
 
-                              return (
-                                <div
-                                  key={
-                                    option
-                                  }
-                                  className={`rounded-xl border p-4 ${
-                                    soal.jawaban ===
-                                    option
-                                      ? "border-green-500 bg-green-50"
-                                      : "border-slate-200"
-                                  }`}
-                                >
-                                  <div className="font-bold">
-                                    {option}.
-                                  </div>
+                        <h3 className="text-lg font-bold">
+                          Soal {index + 1}
+                        </h3>
 
-                                  {text && (
-                                    <p className="mt-1 text-slate-700">
-                                      {text}
-                                    </p>
-                                  )}
+                        <span className="font-semibold text-green-600">
+                          Jawaban: {soal.jawaban}
+                        </span>
 
-                                  {image && (
-                                    <img
-                                      src={
-                                        image
-                                      }
-                                      alt={`Pilihan ${option}`}
-                                      className="mt-3 max-h-48 max-w-full rounded-lg object-contain"
-                                    />
-                                  )}
-                                </div>
-                              );
-                            }
-                          )}
-                        </div>
                       </div>
-                    )
-                  )}
-                </div>
+
+                      {/* PERTANYAAN */}
+
+                      {soal.pertanyaan && (
+                        <p className="leading-relaxed text-slate-700">
+                          {soal.pertanyaan}
+                        </p>
+                      )}
+
+                      {soal.gambar_pertanyaan && (
+                        <div className="mt-4">
+                          <img
+                            src={
+                              soal.gambar_pertanyaan
+                            }
+                            alt={`Gambar soal ${index + 1}`}
+                            className="max-h-72 max-w-full rounded-xl border border-slate-200 object-contain"
+                          />
+                        </div>
+                      )}
+
+                      {/* PILIHAN */}
+
+                      <div className="mt-5 grid gap-4 md:grid-cols-2">
+
+                        {["A", "B", "C", "D"].map(
+                          (option) => {
+                            const text =
+                              soal[
+                                `pilihan_${option.toLowerCase()}`
+                              ];
+
+                            const image =
+                              soal[
+                                `gambar_pilihan_${option.toLowerCase()}`
+                              ];
+
+                            return (
+                              <div
+                                key={option}
+                                className={`rounded-xl border p-4 ${
+                                  soal.jawaban === option
+                                    ? "border-green-500 bg-green-50"
+                                    : "border-slate-200"
+                                }`}
+                              >
+
+                                <div className="font-bold">
+                                  {option}.
+                                </div>
+
+                                {text && (
+                                  <p className="mt-1 text-slate-700">
+                                    {text}
+                                  </p>
+                                )}
+
+                                {image && (
+                                  <img
+                                    src={image}
+                                    alt={`Pilihan ${option}`}
+                                    className="mt-3 max-h-48 max-w-full rounded-lg object-contain"
+                                  />
+                                )}
+
+                              </div>
+                            );
+                          }
+                        )}
+
+                      </div>
+
+                    </div>
+                  )
+                )}
+
               </div>
+
             </div>
           </div>
-        )}
+        </div>
+      )}
 
       {/* =================================================
           PENGATURAN JUMLAH SOAL
@@ -2233,12 +2007,11 @@ export default function Kuis() {
       {showPengaturan && (
         <PengaturanNilai
           onClose={() =>
-            setShowPengaturan(
-              false
-            )
+            setShowPengaturan(false)
           }
         />
       )}
+
     </div>
   );
 }
