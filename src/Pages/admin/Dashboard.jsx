@@ -44,7 +44,7 @@ export default function Dashboard() {
 
   // Membuka file petunjuk
   const bukaPetunjuk = () => {
-    window.open("/petunjuk.pdf", "_blank", "noopener,noreferrer");
+    window.open("/Petunjuk_Penggunaan.pdf", "_blank", "noopener,noreferrer");
   };
 
   return (
