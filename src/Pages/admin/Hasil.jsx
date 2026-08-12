@@ -27,6 +27,12 @@ export default function Hasil() {
   const [statusFilter, setStatusFilter] = useState("semua");
 
   // =========================
+  // KKM
+  // =========================
+  // Nilai minimal agar memenuhi KKM
+  const KKM = 75;
+
+  // =========================
   // FETCH DATA
   // =========================
   useEffect(() => {
@@ -35,11 +41,15 @@ export default function Hasil() {
 
   async function fetchHasil() {
     try {
+
       const response = await axiosInstance.get("/hasil");
+
+      console.log("DATA HASIL:", response.data);
 
       setHasil(response.data);
 
     } catch (error) {
+
       console.error(error);
 
       toast.error("Gagal mengambil data hasil");
@@ -59,15 +69,24 @@ export default function Hasil() {
       .includes(q.toLowerCase());
 
     // =========================
-    // FILTER STATUS KKM
+    // KONVERSI NILAI
     // =========================
-    const status = (h.status || "")
-      .toLowerCase()
-      .trim();
+    const nilai = Number(h.nilai) || 0;
 
+    // =========================
+    // TENTUKAN STATUS KKM
+    // =========================
+    const statusKKM =
+      nilai >= KKM
+        ? "memenuhi kkm"
+        : "tidak memenuhi kkm";
+
+    // =========================
+    // FILTER STATUS
+    // =========================
     const cocokStatus =
       statusFilter === "semua" ||
-      status === statusFilter;
+      statusKKM === statusFilter;
 
     return cocokNama && cocokStatus;
   });
@@ -105,6 +124,9 @@ export default function Hasil() {
 
       document.body.removeChild(link);
 
+      // Bersihkan object URL
+      window.URL.revokeObjectURL(link.href);
+
       toast.success(`Export ${type} berhasil`);
 
     } catch (error) {
@@ -126,7 +148,9 @@ export default function Hasil() {
         description="Pantau nilai kuis siswa dan ekspor laporan."
         actions={
           <>
-            {/* EXPORT EXCEL */}
+            {/* =========================
+                EXPORT EXCEL
+            ========================= */}
             <Button
               variant="outline"
               onClick={() => exp("Excel")}
@@ -135,7 +159,9 @@ export default function Hasil() {
               Excel
             </Button>
 
-            {/* EXPORT PDF */}
+            {/* =========================
+                EXPORT PDF
+            ========================= */}
             <Button
               variant="outline"
               onClick={() => exp("PDF")}
@@ -253,6 +279,20 @@ export default function Hasil() {
         </div>
 
         {/* =========================
+            INFO KKM
+        ========================= */}
+        <div className="px-5 py-3 bg-slate-50 border-b border-slate-100">
+
+          <p className="text-sm text-slate-600">
+            KKM:{" "}
+            <span className="font-bold text-slate-800">
+              {KKM}
+            </span>
+          </p>
+
+        </div>
+
+        {/* =========================
             TABLE
         ========================= */}
         <div className="overflow-x-auto">
@@ -272,13 +312,13 @@ export default function Hasil() {
                   "Nilai",
                   "Tanggal",
                   "Status",
-                ].map((h) => (
+                ].map((header) => (
 
                   <th
-                    key={h}
+                    key={header}
                     className="text-left font-semibold px-5 py-3"
                   >
-                    {h}
+                    {header}
                   </th>
 
                 ))}
@@ -296,12 +336,15 @@ export default function Hasil() {
 
                 data.map((h) => {
 
-                  const status = (h.status || "")
-                    .toLowerCase()
-                    .trim();
+                  // =========================
+                  // NILAI
+                  // =========================
+                  const nilai = Number(h.nilai) || 0;
 
-                  const memenuhiKKM =
-                    status === "memenuhi kkm";
+                  // =========================
+                  // STATUS KKM
+                  // =========================
+                  const memenuhiKKM = nilai >= KKM;
 
                   return (
 
@@ -310,29 +353,41 @@ export default function Hasil() {
                       className="border-t border-slate-100"
                     >
 
-                      {/* SISWA */}
+                      {/* =========================
+                          SISWA
+                      ========================= */}
                       <td className="px-5 py-3 font-medium">
                         {h.siswa}
                       </td>
 
-                      {/* KUIS */}
+                      {/* =========================
+                          KUIS
+                      ========================= */}
                       <td className="px-5 py-3">
                         {h.kuis}
                       </td>
 
-                      {/* NILAI */}
+                      {/* =========================
+                          NILAI
+                      ========================= */}
                       <td className="px-5 py-3">
+
                         <span className="font-bold">
                           {h.nilai}
                         </span>
+
                       </td>
 
-                      {/* TANGGAL */}
+                      {/* =========================
+                          TANGGAL
+                      ========================= */}
                       <td className="px-5 py-3 text-slate-500">
                         {h.tanggal}
                       </td>
 
-                      {/* STATUS KKM */}
+                      {/* =========================
+                          STATUS KKM
+                      ========================= */}
                       <td className="px-5 py-3">
 
                         <span
@@ -343,7 +398,6 @@ export default function Hasil() {
                             px-2
                             py-0.5
                             rounded
-
                             ${
                               memenuhiKKM
                                 ? "bg-emerald-100 text-emerald-700"
@@ -351,9 +405,11 @@ export default function Hasil() {
                             }
                           `}
                         >
+
                           {memenuhiKKM
                             ? "Memenuhi KKM"
                             : "Tidak Memenuhi KKM"}
+
                         </span>
 
                       </td>
@@ -366,7 +422,7 @@ export default function Hasil() {
               ) : (
 
                 /* =========================
-                   DATA KOSONG
+                    DATA KOSONG
                 ========================= */
                 <tr>
 
@@ -381,7 +437,6 @@ export default function Hasil() {
                   >
                     Tidak ada data yang sesuai
                     dengan filter.
-
                   </td>
 
                 </tr>
@@ -391,6 +446,27 @@ export default function Hasil() {
             </tbody>
 
           </table>
+
+        </div>
+
+        {/* =========================
+            FOOTER JUMLAH DATA
+        ========================= */}
+        <div className="px-5 py-3 border-t border-slate-100">
+
+          <p className="text-xs text-slate-500">
+
+            Menampilkan{" "}
+            <span className="font-semibold text-slate-700">
+              {data.length}
+            </span>{" "}
+            dari{" "}
+            <span className="font-semibold text-slate-700">
+              {hasil.length}
+            </span>{" "}
+            data hasil penilaian.
+
+          </p>
 
         </div>
 
