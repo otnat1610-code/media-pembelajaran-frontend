@@ -17,9 +17,11 @@ text: "Dilengkapi kuis interaktif sebagai sarana evaluasi hasil belajar siswa.",
 ];
 
 export default function AboutSection() {
-return ( <section id="tentang" className="py-24 bg-card"> <div className="max-w-7xl mx-auto px-6"> <div className="flex flex-col md:flex-row gap-16 items-center">
+return (
+<section id="tentang" className="py-24 bg-card">
+<div className="max-w-7xl mx-auto px-6">
+<div className="flex flex-col md:flex-row gap-16 items-center">
 
-```
       {/* Image */}
       <div className="w-full md:w-1/2">
         <div className="relative">
@@ -85,7 +87,3 @@ return ( <section id="tentang" className="py-24 bg-card"> <div className="max-w-
     </div>
   </div>
 </section>
-```
-
-);
-}
