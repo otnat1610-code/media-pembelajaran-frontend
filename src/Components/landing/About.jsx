@@ -25,9 +25,9 @@ return ( <section id="tentang" className="py-24 bg-card"> <div className="max-w-
         <div className="relative">
           <div
             className="absolute -inset-6 bg-brand-primary/10 rounded-[40px] blur-2xl"
-            aria-hidden
+            aria-hidden="true"
           />
-          
+
           <img
             src={aboutImg}
             alt="Ilustrasi candi dan motion graphic sejarah Indonesia"
@@ -55,12 +55,11 @@ return ( <section id="tentang" className="py-24 bg-card"> <div className="max-w-
         </p>
 
         <p className="text-ink-soft text-lg leading-relaxed">
-          Materi pembelajaran yang disajikan mengacu pada <strong className="text-ink">
-          Buku IPAS Kelas IV Bab 5 Semester 2
-          </strong>, yang membahas perkembangan sejarah dan keberagaman
-          kerajaan di Indonesia. Materi dikemas dalam bentuk motion graphic,
-          ilustrasi, dan narasi agar siswa dapat memahami materi secara lebih
-          visual dan interaktif.
+          Materi yang disajikan dalam sistem ini mengacu pada Buku IPAS
+          Kelas IV Bab 5 Semester 2. Materi membahas sejarah kerajaan
+          Hindu, Buddha, dan Islam di Indonesia yang dikemas melalui
+          motion graphic, ilustrasi, dan narasi agar lebih mudah dipahami
+          oleh siswa.
         </p>
 
         <div className="grid grid-cols-1 gap-3">
@@ -75,7 +74,9 @@ return ( <section id="tentang" className="py-24 bg-card"> <div className="max-w-
                 <Check className="size-4" strokeWidth={3} />
               </div>
 
-              <p className="font-medium text-ink">{p.text}</p>
+              <p className="font-medium text-ink">
+                {p.text}
+              </p>
             </div>
           ))}
         </div>
@@ -84,3 +85,7 @@ return ( <section id="tentang" className="py-24 bg-card"> <div className="max-w-
     </div>
   </div>
 </section>
+```
+
+);
+}
