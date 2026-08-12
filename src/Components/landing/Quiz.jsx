@@ -8,7 +8,7 @@ const letters = ["A", "B", "C", "D"];
 // DURASI KUIS
 // =====================================================
 
-const DURASI_KUIS = 10 * 60;
+const DURASI_KUIS = 10 * 60; // 10 menit
 
 export default function QuizSection() {
   // =====================================================
@@ -51,7 +51,8 @@ export default function QuizSection() {
   // STATE TIMER
   // =====================================================
 
-  const [timeLeft, setTimeLeft] = useState(DURASI_KUIS);
+  const [timeLeft, setTimeLeft] =
+    useState(DURASI_KUIS);
 
   const timerRef = useRef(null);
 
@@ -102,7 +103,7 @@ export default function QuizSection() {
   }, [questions]);
 
   // =====================================================
-  // GET DATA
+  // GET DATA AWAL
   // =====================================================
 
   useEffect(() => {
@@ -186,17 +187,23 @@ export default function QuizSection() {
 
   async function fetchStudents() {
     try {
-      const res = await axiosInstance.get(
-        "/siswa"
+      const response =
+        await axiosInstance.get("/siswa");
+
+      console.log(
+        "================================="
+      );
+      console.log("DATA SISWA:");
+      console.log(response.data);
+      console.log(
+        "================================="
       );
 
-      console.log("DEBUG SISWA:");
-      console.log(res.data);
+      let data = response.data;
 
-      let data = res.data;
-
-      // Jika response berbentuk:
+      // Jika backend mengirim:
       // { data: [...] }
+
       if (
         !Array.isArray(data) &&
         Array.isArray(data?.data)
@@ -207,7 +214,7 @@ export default function QuizSection() {
       if (!Array.isArray(data)) {
         console.error(
           "FORMAT DATA SISWA TIDAK VALID:",
-          data
+          response.data
         );
 
         setStudents([]);
@@ -219,6 +226,11 @@ export default function QuizSection() {
       console.log(
         "ERROR FETCH SISWA:",
         error
+      );
+
+      console.log(
+        "RESPONSE ERROR:",
+        error.response?.data
       );
 
       setStudents([]);
@@ -239,30 +251,21 @@ export default function QuizSection() {
       console.log(
         "================================="
       );
-
-      console.log(
-        "LIST KUIS:",
-        response.data
-      );
-
-      console.log(
-        "TIPE DATA:",
-        typeof response.data
-      );
-
+      console.log("LIST KUIS:");
+      console.log(response.data);
       console.log(
         "APAKAH ARRAY:",
         Array.isArray(response.data)
       );
-
       console.log(
         "================================="
       );
 
       let data = response.data;
 
-      // Jika response berbentuk:
+      // Jika backend mengirim:
       // { data: [...] }
+
       if (
         !Array.isArray(data) &&
         Array.isArray(data?.data)
@@ -270,11 +273,10 @@ export default function QuizSection() {
         data = data.data;
       }
 
-      // Pastikan selalu array
       if (!Array.isArray(data)) {
         console.error(
           "FORMAT LIST KUIS TIDAK VALID:",
-          data
+          response.data
         );
 
         setQuizList([]);
@@ -343,35 +345,82 @@ export default function QuizSection() {
       );
 
       console.log(
-        "TIPE DATA:",
-        typeof response.data
-      );
-
-      console.log(
-        "APAKAH ARRAY:",
-        Array.isArray(response.data)
-      );
-
-      console.log(
         "================================="
       );
 
+      /*
+       * RESPONSE BACKEND KAMU:
+       *
+       * {
+       *   id_kuis: 1,
+       *   judul: "...",
+       *   durasi: 10,
+       *   soal: [...]
+       * }
+       */
+
       let data = response.data;
 
-      // Jika backend mengembalikan:
-      // { data: [...] }
+      // =================================================
+      // FORMAT UTAMA BACKEND
+      // =================================================
+
       if (
-        !Array.isArray(data) &&
+        data &&
+        Array.isArray(data.soal)
+      ) {
+        data = data.soal;
+      }
+
+      // =================================================
+      // ANTISIPASI:
+      //
+      // {
+      //   data: {
+      //     soal: [...]
+      //   }
+      // }
+      // =================================================
+
+      else if (
+        data?.data &&
+        Array.isArray(data.data.soal)
+      ) {
+        data = data.data.soal;
+      }
+
+      // =================================================
+      // ANTISIPASI:
+      //
+      // {
+      //   data: [...]
+      // }
+      // =================================================
+
+      else if (
         Array.isArray(data?.data)
       ) {
         data = data.data;
       }
 
-      // Pastikan selalu array
+      // =================================================
+      // ANTISIPASI JIKA LANGSUNG ARRAY
+      // =================================================
+
+      else if (
+        Array.isArray(data)
+      ) {
+        data = data;
+      }
+
+      // =================================================
+      // VALIDASI
+      // =================================================
+
       if (!Array.isArray(data)) {
         console.error(
           "FORMAT DATA SOAL TIDAK VALID:",
-          data
+          response.data
         );
 
         setQuestions([]);
@@ -383,6 +432,21 @@ export default function QuizSection() {
 
         return;
       }
+
+      console.log(
+        "SOAL YANG AKAN DITAMPILKAN:"
+      );
+
+      console.log(data);
+
+      console.log(
+        "JUMLAH SOAL:",
+        data.length
+      );
+
+      // =================================================
+      // SIMPAN SOAL
+      // =================================================
 
       setQuestions(data);
       questionsRef.current = data;
@@ -437,6 +501,10 @@ export default function QuizSection() {
       quizList
     );
 
+    // ===================================================
+    // VALIDASI SISWA
+    // ===================================================
+
     if (!selectedStudent) {
       setError(
         "Pilih siswa terlebih dahulu"
@@ -444,6 +512,10 @@ export default function QuizSection() {
 
       return;
     }
+
+    // ===================================================
+    // VALIDASI KUIS
+    // ===================================================
 
     if (
       quizList.length > 1 &&
@@ -455,6 +527,10 @@ export default function QuizSection() {
 
       return;
     }
+
+    // ===================================================
+    // CARI SISWA
+    // ===================================================
 
     const siswa =
       students.find(
@@ -471,6 +547,10 @@ export default function QuizSection() {
       return;
     }
 
+    // ===================================================
+    // CARI KUIS
+    // ===================================================
+
     const kuisDipilih =
       quizList.find(
         (item) =>
@@ -483,6 +563,10 @@ export default function QuizSection() {
         kuisDipilih.judul
       );
     }
+
+    // ===================================================
+    // RESET DATA KUIS
+    // ===================================================
 
     setNis(siswa.nis);
     setNama(siswa.nama);
@@ -501,6 +585,13 @@ export default function QuizSection() {
     setDone(false);
     setNilaiAkhir(0);
 
+    setQuestions([]);
+    questionsRef.current = [];
+
+    // ===================================================
+    // AMBIL SOAL
+    // ===================================================
+
     await fetchQuestions(
       selectedQuiz
     );
@@ -509,7 +600,7 @@ export default function QuizSection() {
     setStarted(true);
 
     // ===================================================
-    // MULAI TIMER 10 MENIT
+    // MULAI TIMER
     // ===================================================
 
     startQuizTimer();
@@ -546,10 +637,14 @@ export default function QuizSection() {
       letters[currentSelected];
 
     const existingAnswers =
-      answersRef.current;
+      Array.isArray(
+        answersRef.current
+      )
+        ? answersRef.current
+        : [];
 
     // ===================================================
-    // CEGAH DUPLIKAT JAWABAN
+    // CEGAH DUPLIKAT
     // ===================================================
 
     const filteredAnswers =
@@ -630,6 +725,10 @@ export default function QuizSection() {
       );
     }
 
+    // ===================================================
+    // RESET PILIHAN
+    // ===================================================
+
     setSelected(null);
     selectedRef.current = null;
 
@@ -676,11 +775,15 @@ export default function QuizSection() {
     clearQuizTimer();
 
     // ===================================================
-    // SIMPAN JAWABAN SOAL TERAKHIR
+    // SIMPAN JAWABAN TERAKHIR
     // ===================================================
 
     let finalAnswers =
-      answersRef.current;
+      Array.isArray(
+        answersRef.current
+      )
+        ? answersRef.current
+        : [];
 
     if (
       selectedRef.current !== null &&
@@ -733,13 +836,15 @@ export default function QuizSection() {
         return;
       }
 
-      // Pastikan jawaban selalu array
-      if (!Array.isArray(finalAnswers)) {
-        console.error(
-          "FINAL ANSWERS BUKAN ARRAY:",
-          finalAnswers
-        );
+      // =================================================
+      // PASTIKAN ARRAY
+      // =================================================
 
+      if (
+        !Array.isArray(
+          finalAnswers
+        )
+      ) {
         finalAnswers = [];
       }
 
@@ -771,7 +876,7 @@ export default function QuizSection() {
       );
 
       // =================================================
-      // SUBMIT
+      // SUBMIT KE BACKEND
       // =================================================
 
       const response =
@@ -794,11 +899,16 @@ export default function QuizSection() {
         response.data
       );
 
+      // =================================================
+      // NILAI
+      // =================================================
+
       setNilaiAkhir(
         response.data.nilai
       );
 
       setDone(true);
+
     } catch (error) {
       console.log(
         "ERROR SUBMIT:",
@@ -815,6 +925,7 @@ export default function QuizSection() {
           ?.message ||
           "Gagal menyimpan jawaban"
       );
+
     } finally {
       setSubmitting(false);
     }
@@ -864,7 +975,7 @@ export default function QuizSection() {
   }
 
   // =====================================================
-  // CLASS TIMER
+  // TIMER WARNING
   // =====================================================
 
   const timerWarning =
@@ -905,6 +1016,10 @@ export default function QuizSection() {
     );
   }
 
+  // =====================================================
+  // RENDER
+  // =====================================================
+
   return (
     <section
       id="kuis"
@@ -917,6 +1032,7 @@ export default function QuizSection() {
         ================================================= */}
 
         <div className="text-center mb-10">
+
           <span className="inline-block text-brand-secondary font-bold text-sm uppercase tracking-widest mb-3">
             Kuis Interaktif
           </span>
@@ -924,6 +1040,7 @@ export default function QuizSection() {
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-ink">
             Siap Uji Pengetahuanmu?
           </h2>
+
         </div>
 
         {/* =================================================
@@ -937,6 +1054,7 @@ export default function QuizSection() {
           ================================================= */}
 
           {!started ? (
+
             <div className="max-w-xl mx-auto">
 
               <h3 className="font-display text-2xl font-bold text-ink mb-6 text-center">
@@ -948,6 +1066,7 @@ export default function QuizSection() {
                 {/* SISWA */}
 
                 <div>
+
                   <label className="block text-sm font-bold text-ink mb-2">
                     Daftar Siswa
                   </label>
@@ -963,6 +1082,7 @@ export default function QuizSection() {
                     }
                     className="w-full px-4 py-4 rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-brand-secondary"
                   >
+
                     <option value="">
                       Pilih Nama
                     </option>
@@ -982,6 +1102,7 @@ export default function QuizSection() {
                         </option>
                       )
                     )}
+
                   </select>
 
                   {/* KUIS KOSONG */}
@@ -1000,6 +1121,7 @@ export default function QuizSection() {
                       {error}
                     </p>
                   )}
+
                 </div>
 
                 {/* =================================================
@@ -1007,7 +1129,9 @@ export default function QuizSection() {
                 ================================================= */}
 
                 {showQuizSelection && (
+
                   <div>
+
                     <label className="block text-sm font-bold text-ink mb-2">
                       Pilih Kuis
                     </label>
@@ -1023,6 +1147,7 @@ export default function QuizSection() {
                       }
                       className="w-full px-4 py-4 rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-brand-secondary"
                     >
+
                       <option value="">
                         Pilih Kuis
                       </option>
@@ -1041,21 +1166,30 @@ export default function QuizSection() {
                           </option>
                         )
                       )}
+
                     </select>
+
                   </div>
+
                 )}
 
-                {/* INFO DURASI */}
+                {/* =================================================
+                    INFO DURASI
+                ================================================= */}
 
                 <div className="flex items-center justify-center gap-2 rounded-2xl bg-orange-50 border border-orange-200 px-4 py-3 text-orange-700">
+
                   <Clock className="h-5 w-5" />
 
                   <span className="font-semibold">
                     Durasi pengerjaan: 10 menit
                   </span>
+
                 </div>
 
-                {/* BUTTON MULAI */}
+                {/* =================================================
+                    BUTTON MULAI
+                ================================================= */}
 
                 <button
                   onClick={
@@ -1074,7 +1208,9 @@ export default function QuizSection() {
                 >
                   Mulai Kuis
                 </button>
+
               </div>
+
             </div>
 
           ) : !done ? (
@@ -1097,7 +1233,7 @@ export default function QuizSection() {
               </div>
 
               {/* =================================================
-                  INFO SISWA + TIMER
+                  INFO SISWA + TIMER + PROGRESS
               ================================================= */}
 
               <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
@@ -1105,6 +1241,7 @@ export default function QuizSection() {
                 {/* SISWA */}
 
                 <div>
+
                   <p className="font-bold text-ink text-lg">
                     {nama}
                   </p>
@@ -1112,6 +1249,7 @@ export default function QuizSection() {
                   <p className="text-sm text-ink-soft">
                     NISN: {nis}
                   </p>
+
                 </div>
 
                 {/* TIMER */}
@@ -1123,6 +1261,7 @@ export default function QuizSection() {
                       : "bg-orange-50 border-orange-200 text-orange-600"
                   }`}
                 >
+
                   <Clock className="w-5 h-5" />
 
                   <span className="text-lg tabular-nums">
@@ -1130,6 +1269,7 @@ export default function QuizSection() {
                       timeLeft
                     )}
                   </span>
+
                 </div>
 
                 {/* PROGRESS */}
@@ -1159,7 +1299,9 @@ export default function QuizSection() {
                     />
 
                   </div>
+
                 </div>
+
               </div>
 
               {/* =================================================
@@ -1168,10 +1310,12 @@ export default function QuizSection() {
 
               {timeLeft <= 60 &&
                 timeLeft > 0 && (
-                  <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm font-semibold text-red-600">
-                    ⚠️ Waktu tersisa kurang dari 1 menit!
-                  </div>
-                )}
+
+                <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm font-semibold text-red-600">
+                  ⚠️ Waktu tersisa kurang dari 1 menit!
+                </div>
+
+              )}
 
               {/* =================================================
                   QUESTION
@@ -1179,7 +1323,9 @@ export default function QuizSection() {
 
               <div className="space-y-6">
 
-                {/* PERTANYAAN */}
+                {/* =================================================
+                    PERTANYAAN
+                ================================================= */}
 
                 <div className="p-5 sm:p-6 bg-bg-soft rounded-2xl">
 
@@ -1187,17 +1333,20 @@ export default function QuizSection() {
                     Soal {idx + 1}
                   </p>
 
-                  {/* TEKS */}
+                  {/* TEKS PERTANYAAN */}
 
                   {current.q && (
+
                     <p className="text-base sm:text-lg font-medium text-ink leading-relaxed">
                       {current.q}
                     </p>
+
                   )}
 
                   {/* GAMBAR PERTANYAAN */}
 
                   {current.gambar_pertanyaan && (
+
                     <div className="mt-4 flex justify-center">
 
                       <img
@@ -1209,6 +1358,7 @@ export default function QuizSection() {
                         }`}
                         className="max-h-80 max-w-full rounded-2xl object-contain border border-border shadow-sm"
                         onError={(e) => {
+
                           console.error(
                             "Gambar pertanyaan gagal dimuat:",
                             current.gambar_pertanyaan
@@ -1216,10 +1366,12 @@ export default function QuizSection() {
 
                           e.currentTarget.style.display =
                             "none";
+
                         }}
                       />
 
                     </div>
+
                   )}
 
                 </div>
@@ -1245,6 +1397,7 @@ export default function QuizSection() {
                           null;
 
                         return (
+
                           <button
                             key={
                               letters[i]
@@ -1271,16 +1424,19 @@ export default function QuizSection() {
                               </span>
 
                               {optionText && (
+
                                 <span className="leading-relaxed">
                                   {optionText}
                                 </span>
+
                               )}
 
                             </div>
 
-                            {/* GAMBAR */}
+                            {/* GAMBAR PILIHAN */}
 
                             {optionImage && (
+
                               <div className="mt-4 flex justify-center">
 
                                 <img
@@ -1292,6 +1448,7 @@ export default function QuizSection() {
                                   }`}
                                   className="max-h-52 max-w-full rounded-xl object-contain border border-border"
                                   onError={(e) => {
+
                                     console.error(
                                       `Gambar pilihan ${letters[i]} gagal dimuat:`,
                                       optionImage
@@ -1299,13 +1456,16 @@ export default function QuizSection() {
 
                                     e.currentTarget.style.display =
                                       "none";
+
                                   }}
                                 />
 
                               </div>
+
                             )}
 
                           </button>
+
                         );
                       }
                     )}
@@ -1331,12 +1491,14 @@ export default function QuizSection() {
                     }
                     className="bg-brand-secondary text-white px-8 sm:px-10 py-3 rounded-xl font-bold shadow-lg shadow-brand-secondary/30 disabled:opacity-40 disabled:cursor-not-allowed hover:-translate-y-0.5 transition-transform"
                   >
+
                     {submitting
                       ? "Menyimpan..."
                       : idx + 1 ===
                         questions.length
                       ? "Selesai"
                       : "Lanjut"}
+
                   </button>
 
                 </div>
@@ -1400,6 +1562,7 @@ export default function QuizSection() {
               </button>
 
             </div>
+
           )}
 
         </div>
