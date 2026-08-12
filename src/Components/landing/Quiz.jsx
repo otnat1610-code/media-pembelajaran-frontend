@@ -7,7 +7,7 @@ const letters = ["A", "B", "C", "D"];
 // =====================================================
 // DURASI KUIS
 // =====================================================
-// 10 menit = 600 detik
+
 const DURASI_KUIS = 10 * 60;
 
 export default function QuizSection() {
@@ -51,8 +51,7 @@ export default function QuizSection() {
   // STATE TIMER
   // =====================================================
 
-  const [timeLeft, setTimeLeft] =
-    useState(DURASI_KUIS);
+  const [timeLeft, setTimeLeft] = useState(DURASI_KUIS);
 
   const timerRef = useRef(null);
 
@@ -66,7 +65,7 @@ export default function QuizSection() {
   const questionsRef = useRef([]);
 
   // =====================================================
-  // STATE KUIS
+  // STATE LIST KUIS
   // =====================================================
 
   const [quizList, setQuizList] = useState([]);
@@ -80,8 +79,7 @@ export default function QuizSection() {
   // CURRENT QUESTION
   // =====================================================
 
-  const current =
-    questions[idx] || {};
+  const current = questions[idx] || {};
 
   // =====================================================
   // SINKRONISASI REF
@@ -154,7 +152,6 @@ export default function QuizSection() {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearQuizTimer();
-
           return 0;
         }
 
@@ -189,18 +186,42 @@ export default function QuizSection() {
 
   async function fetchStudents() {
     try {
-      const res =
-        await axiosInstance.get("/siswa");
+      const res = await axiosInstance.get(
+        "/siswa"
+      );
 
       console.log("DEBUG SISWA:");
       console.log(res.data);
 
-      setStudents(res.data);
+      let data = res.data;
+
+      // Jika response berbentuk:
+      // { data: [...] }
+      if (
+        !Array.isArray(data) &&
+        Array.isArray(data?.data)
+      ) {
+        data = data.data;
+      }
+
+      if (!Array.isArray(data)) {
+        console.error(
+          "FORMAT DATA SISWA TIDAK VALID:",
+          data
+        );
+
+        setStudents([]);
+        return;
+      }
+
+      setStudents(data);
     } catch (error) {
       console.log(
         "ERROR FETCH SISWA:",
         error
       );
+
+      setStudents([]);
     }
   }
 
@@ -215,12 +236,53 @@ export default function QuizSection() {
           "/kuis/list"
         );
 
-      const data = response.data;
+      console.log(
+        "================================="
+      );
 
       console.log(
         "LIST KUIS:",
-        data
+        response.data
       );
+
+      console.log(
+        "TIPE DATA:",
+        typeof response.data
+      );
+
+      console.log(
+        "APAKAH ARRAY:",
+        Array.isArray(response.data)
+      );
+
+      console.log(
+        "================================="
+      );
+
+      let data = response.data;
+
+      // Jika response berbentuk:
+      // { data: [...] }
+      if (
+        !Array.isArray(data) &&
+        Array.isArray(data?.data)
+      ) {
+        data = data.data;
+      }
+
+      // Pastikan selalu array
+      if (!Array.isArray(data)) {
+        console.error(
+          "FORMAT LIST KUIS TIDAK VALID:",
+          data
+        );
+
+        setQuizList([]);
+        setSelectedQuiz("");
+        setShowQuizSelection(false);
+
+        return;
+      }
 
       setQuizList(data);
 
@@ -242,6 +304,15 @@ export default function QuizSection() {
         "ERROR FETCH LIST KUIS:",
         error
       );
+
+      console.log(
+        "RESPONSE ERROR:",
+        error.response?.data
+      );
+
+      setQuizList([]);
+      setSelectedQuiz("");
+      setShowQuizSelection(false);
     }
   }
 
@@ -272,18 +343,63 @@ export default function QuizSection() {
       );
 
       console.log(
+        "TIPE DATA:",
+        typeof response.data
+      );
+
+      console.log(
+        "APAKAH ARRAY:",
+        Array.isArray(response.data)
+      );
+
+      console.log(
         "================================="
       );
 
-      setQuestions(response.data);
+      let data = response.data;
 
-      questionsRef.current =
-        response.data;
+      // Jika backend mengembalikan:
+      // { data: [...] }
+      if (
+        !Array.isArray(data) &&
+        Array.isArray(data?.data)
+      ) {
+        data = data.data;
+      }
+
+      // Pastikan selalu array
+      if (!Array.isArray(data)) {
+        console.error(
+          "FORMAT DATA SOAL TIDAK VALID:",
+          data
+        );
+
+        setQuestions([]);
+        questionsRef.current = [];
+
+        setError(
+          "Format data soal dari server tidak valid."
+        );
+
+        return;
+      }
+
+      setQuestions(data);
+      questionsRef.current = data;
+
     } catch (error) {
       console.log(
         "ERROR FETCH SOAL:",
         error
       );
+
+      console.log(
+        "RESPONSE ERROR:",
+        error.response?.data
+      );
+
+      setQuestions([]);
+      questionsRef.current = [];
 
       setError(
         "Gagal mengambil soal kuis."
@@ -292,18 +408,6 @@ export default function QuizSection() {
       setLoading(false);
     }
   }
-
-  // =====================================================
-  // TOTAL POIN
-  // =====================================================
-
-  const totalPoin =
-    questions.reduce(
-      (sum, item) =>
-        sum +
-        Number(item.poin || 0),
-      0
-    );
 
   // =====================================================
   // PROGRESS
@@ -573,7 +677,6 @@ export default function QuizSection() {
 
     // ===================================================
     // SIMPAN JAWABAN SOAL TERAKHIR
-    // JIKA SISWA SEDANG MEMILIH JAWABAN
     // ===================================================
 
     let finalAnswers =
@@ -628,6 +731,16 @@ export default function QuizSection() {
         setSubmitting(false);
 
         return;
+      }
+
+      // Pastikan jawaban selalu array
+      if (!Array.isArray(finalAnswers)) {
+        console.error(
+          "FINAL ANSWERS BUKAN ARRAY:",
+          finalAnswers
+        );
+
+        finalAnswers = [];
       }
 
       console.log(
@@ -1001,9 +1114,7 @@ export default function QuizSection() {
                   </p>
                 </div>
 
-                {/* =================================================
-                    TIMER
-                ================================================= */}
+                {/* TIMER */}
 
                 <div
                   className={`flex items-center gap-2 px-4 py-3 rounded-xl border font-bold ${
@@ -1021,9 +1132,7 @@ export default function QuizSection() {
                   </span>
                 </div>
 
-                {/* =================================================
-                    PROGRESS
-                ================================================= */}
+                {/* PROGRESS */}
 
                 <div className="text-right shrink-0">
 
@@ -1048,6 +1157,7 @@ export default function QuizSection() {
                         width: `${progress}%`,
                       }}
                     />
+
                   </div>
                 </div>
               </div>
@@ -1085,7 +1195,7 @@ export default function QuizSection() {
                     </p>
                   )}
 
-                  {/* GAMBAR */}
+                  {/* GAMBAR PERTANYAAN */}
 
                   {current.gambar_pertanyaan && (
                     <div className="mt-4 flex justify-center">
@@ -1108,8 +1218,10 @@ export default function QuizSection() {
                             "none";
                         }}
                       />
+
                     </div>
                   )}
+
                 </div>
 
                 {/* =================================================
@@ -1118,79 +1230,86 @@ export default function QuizSection() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
 
-                  {current.options?.map(
-                    (opt, i) => {
+                  {Array.isArray(
+                    current.options
+                  ) &&
+                    current.options.map(
+                      (opt, i) => {
 
-                      const optionText =
-                        opt?.text ||
-                        "";
+                        const optionText =
+                          opt?.text ||
+                          "";
 
-                      const optionImage =
-                        opt?.image ||
-                        null;
+                        const optionImage =
+                          opt?.image ||
+                          null;
 
-                      return (
-                        <button
-                          key={
-                            letters[i]
-                          }
-                          type="button"
-                          onClick={() =>
-                            setSelected(
-                              i
-                            )
-                          }
-                          className={`p-4 text-left border-2 rounded-2xl font-medium transition-all ${
-                            selected === i
-                              ? "border-brand-secondary bg-brand-secondary/10 text-ink"
-                              : "border-border hover:border-brand-secondary/50 hover:bg-brand-secondary/5 text-ink"
-                          }`}
-                        >
+                        return (
+                          <button
+                            key={
+                              letters[i]
+                            }
+                            type="button"
+                            onClick={() =>
+                              setSelected(
+                                i
+                              )
+                            }
+                            className={`p-4 text-left border-2 rounded-2xl font-medium transition-all ${
+                              selected === i
+                                ? "border-brand-secondary bg-brand-secondary/10 text-ink"
+                                : "border-border hover:border-brand-secondary/50 hover:bg-brand-secondary/5 text-ink"
+                            }`}
+                          >
 
-                          {/* LABEL + TEKS */}
+                            {/* LABEL + TEKS */}
 
-                          <div className="flex items-start">
+                            <div className="flex items-start">
 
-                            <span className="font-display font-bold text-brand-secondary mr-2 shrink-0">
-                              {letters[i]}.
-                            </span>
-
-                            {optionText && (
-                              <span className="leading-relaxed">
-                                {optionText}
+                              <span className="font-display font-bold text-brand-secondary mr-2 shrink-0">
+                                {letters[i]}.
                               </span>
-                            )}
-                          </div>
 
-                          {/* GAMBAR */}
+                              {optionText && (
+                                <span className="leading-relaxed">
+                                  {optionText}
+                                </span>
+                              )}
 
-                          {optionImage && (
-                            <div className="mt-4 flex justify-center">
-
-                              <img
-                                src={
-                                  optionImage
-                                }
-                                alt={`Gambar pilihan ${
-                                  letters[i]
-                                }`}
-                                className="max-h-52 max-w-full rounded-xl object-contain border border-border"
-                                onError={(e) => {
-                                  console.error(
-                                    `Gambar pilihan ${letters[i]} gagal dimuat:`,
-                                    optionImage
-                                  );
-
-                                  e.currentTarget.style.display =
-                                    "none";
-                                }}
-                              />
                             </div>
-                          )}
-                        </button>
-                      );
-                    }
-                  )}
+
+                            {/* GAMBAR */}
+
+                            {optionImage && (
+                              <div className="mt-4 flex justify-center">
+
+                                <img
+                                  src={
+                                    optionImage
+                                  }
+                                  alt={`Gambar pilihan ${
+                                    letters[i]
+                                  }`}
+                                  className="max-h-52 max-w-full rounded-xl object-contain border border-border"
+                                  onError={(e) => {
+                                    console.error(
+                                      `Gambar pilihan ${letters[i]} gagal dimuat:`,
+                                      optionImage
+                                    );
+
+                                    e.currentTarget.style.display =
+                                      "none";
+                                  }}
+                                />
+
+                              </div>
+                            )}
+
+                          </button>
+                        );
+                      }
+                    )}
+
                 </div>
 
                 {/* =================================================
@@ -1219,7 +1338,9 @@ export default function QuizSection() {
                       ? "Selesai"
                       : "Lanjut"}
                   </button>
+
                 </div>
+
               </div>
             </>
 
@@ -1277,6 +1398,7 @@ export default function QuizSection() {
               >
                 Selesai
               </button>
+
             </div>
           )}
 
