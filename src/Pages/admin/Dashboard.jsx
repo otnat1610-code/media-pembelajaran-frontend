@@ -44,7 +44,7 @@ export default function Dashboard() {
 
   // Membuka file petunjuk
   const bukaPetunjuk = () => {
-    window.open("/Petunjuk_Penggunaan.pdf", "_blank", "noopener,noreferrer");
+    window.open("/Petunjuk_Penggunaan_Sistem_Media_Pembelajaran_SDN_Tambahrejo_02.pdf", "_blank", "noopener,noreferrer");
   };
 
   return (
